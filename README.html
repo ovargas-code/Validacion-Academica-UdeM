@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validación Académica MS — README</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #f78166;
+    --accent4: #d2a8ff;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --code-bg: #1c2128;
+    --copy-btn: #238636;
+    --copy-hover: #2ea043;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 32px 16px 80px;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .readme-header {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 36px 40px 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .readme-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent4), var(--accent2));
+  }
+  .readme-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .readme-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 600px;
+  }
+
+  /* BADGES */
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+  }
+  .badge.green { color: var(--accent2); }
+  .badge.purple { color: var(--accent4); }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* SECTIONS */
+  .section {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+  }
+  .section-header h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.2px;
+  }
+  .section-header .icon { font-size: 1.2rem; }
+
+  .section-body { padding: 20px 24px; }
+
+  /* SUBSECTIONS */
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 20px 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  h3:first-child { margin-top: 0; }
+
+  p { margin-bottom: 10px; color: var(--text); }
+
+  /* LISTS */
+  ul, ol {
+    padding-left: 20px;
+    margin-bottom: 10px;
+  }
+  li { margin-bottom: 4px; color: var(--text); }
+  li::marker { color: var(--accent); }
+
+  /* LINKS */
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  a:hover {
+    color: #79c0ff;
+    border-bottom-color: #79c0ff;
+  }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 10px 0 16px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .copy-btn {
+    background: var(--copy-btn);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .copy-btn:hover { background: var(--copy-hover); }
+  .copy-btn:active { transform: scale(0.97); }
+  .copy-btn.copied {
+    background: #1f6feb;
+  }
+  .copy-btn svg { width: 12px; height: 12px; fill: currentColor; }
+
+  pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #c9d1d9;
+    white-space: pre;
+  }
+
+  /* INLINE CODE */
+  p code, li code {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 12.5px;
+    color: var(--accent4);
+  }
+
+  /* BOLD */
+  strong { color: var(--text); font-weight: 700; }
+
+  /* MODE CARDS */
+  .mode-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .mode-card-header {
+    padding: 12px 18px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mode-card-body { padding: 16px 18px 6px; }
+
+  /* LINKS LIST */
+  .links-list {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 14px;
+  }
+  .links-list li {
+    padding: 3px 0;
+  }
+  .links-list li::before {
+    content: '→ ';
+    color: var(--accent2);
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* FLOW STEPS */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 8px 0 16px;
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 13.5px;
+  }
+  .flow-step .num {
+    background: var(--accent);
+    color: #000;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ALERT */
+  .alert {
+    background: rgba(247,129,102,0.08);
+    border: 1px solid rgba(247,129,102,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    font-size: 13.5px;
+    color: #f78166;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  /* STATUS ROW */
+  .status-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0 14px; }
+  .status-item {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* SUBHEADER */
+  .sub-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="readme-header">
+    <h1>🎓 Validación Académica MS</h1>
+    <p>Microservicio Spring Boot para validar información académica, generar certificados PDF y enviarlos por correo.</p>
+    <div class="badges">
+      <span class="badge">Java 21</span>
+      <span class="badge green">Spring Boot</span>
+      <span class="badge">Docker</span>
+      <span class="badge purple">PostgreSQL</span>
+      <span class="badge">H2</span>
+    </div>
+  </div>
+
+  <!-- ARQUITECTURA -->
+  <div class="section">
+    <div class="section-header">
+      <span class="icon">🧠</span>
+      <h2>Arquitectura del sistema</h2>
+    </div>
+    <div class="section-body">
+      <h3>Descripción</h3>
+      <ul>
+        <li>Frontend implícito: acceso vía navegador (Swagger o portal)</li>
+        <li>Backend: Spring Boot (lógica de validación)</li>
+        <li>Generador PDF automático</li>
+        <li>Envío de correos con Gmail SMTP</li>
+      </ul>
+      <h3>Base de datos</h3>
+      <ul>
+        <li><strong>H2</strong> → pruebas rápidas</li>
+        <li><strong>PostgreSQL</strong> → Docker</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- REQUISITOS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="icon">📋</span>
+      <h2>Requisitos</h2>
+    </div>
+    <div class="section-body">
+      <ul>
+        <li>Java 21</li>
+        <li>Docker Desktop</li>
+        <li>PowerShell en Windows</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓN CORREO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="icon">📧</span>
+      <h2>Configuración del correo</h2>
+    </div>
+    <div class="section-body">
+      <h3>Crear <code>.env</code></h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">powershell</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+            Copiar
+          </button>
+        </div>
+        <pre><code>Copy-Item .env.example .env</code></pre>
+      </div>
+
+      <p class="sub-label">Editar <code>.env</code> con los siguientes valores:</p>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">env</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+            Copiar
+          </button>
+        </div>
+        <pre><code>ADMIN_USER=admin
+ADMIN_PASSWORD=udem2026
+SERVER_PORT=8081
+
+DB_URL=jdbc:postgresql://localhost:5432/validacion_academica
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=su_correo@gmail.com
+MAIL_PASSWORD=su_app_password
+MAIL_STARTTLS_ENABLE=true
+MAIL_STARTTLS_REQUIRED=false
+MAIL_SSL_ENABLE=false
+MAIL_DEBUG=true</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODOS DE EJECUCIÓN -->
+  <div class="section">
+    <div class="section-header">
+      <span class="icon">⚙️</span>
+      <h2>Modos de ejecución</h2>
+    </div>
+    <div class="section-body">
+
+      <!-- MODO 1 -->
+      <div class="mode-card">
+        <div class="mode-card-header">🔹 Modo 1 — Local (H2)</div>
+        <div class="mode-card-body">
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>.\gradlew.bat bootRun --args="--server.port=8081"</code></pre>
+          </div>
+          <p class="sub-label">Acceso</p>
+          <ul class="links-list">
+            <li><a href="http://localhost:8081" target="_blank">http://localhost:8081</a></li>
+            <li><a href="http://localhost:8081/h2-console" target="_blank">http://localhost:8081/h2-console</a></li>
+            <li><a href="http://localhost:8081/swagger-ui/index.html" target="_blank">http://localhost:8081/swagger-ui/index.html</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- MODO 2 -->
+      <div class="mode-card">
+        <div class="mode-card-header">🔹 Modo 2 — PostgreSQL en Docker + App local</div>
+        <div class="mode-card-body">
+          <p class="sub-label">Limpieza</p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker stop validacion-app validacion-postgres</code></pre>
+          </div>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker rm -f validacion-app validacion-postgres</code></pre>
+          </div>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker-compose down --remove-orphans</code></pre>
+          </div>
+
+          <p class="sub-label">Levantar base de datos</p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker-compose up postgres -d</code></pre>
+          </div>
+
+          <p class="sub-label">Verificar contenedores</p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker ps</code></pre>
+          </div>
+
+          <p class="sub-label">Ejecutar aplicación</p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>.\gradlew.bat bootRun --args="--spring.profiles.active=postgres --server.port=8081"</code></pre>
+          </div>
+
+          <p class="sub-label">Acceso</p>
+          <ul class="links-list">
+            <li><a href="http://localhost:8081" target="_blank">http://localhost:8081</a></li>
+            <li><a href="http://localhost:8081/swagger-ui/index.html" target="_blank">http://localhost:8081/swagger-ui/index.html</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- MODO 3 -->
+      <div class="mode-card">
+        <div class="mode-card-header">🔹 Modo 3 — Todo en Docker</div>
+        <div class="mode-card-body">
+          <p class="sub-label">Limpieza</p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker stop validacion-app validacion-postgres</code></pre>
+          </div>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker rm -f validacion-app validacion-postgres</code></pre>
+          </div>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker-compose down --remove-orphans</code></pre>
+          </div>
+
+          <p class="sub-label">Build y ejecución</p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">powershell</span>
+              <button class="copy-btn" onclick="copyCode(this)">
+                <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+                Copiar
+              </button>
+            </div>
+            <pre><code>docker-compose up --build</code></pre>
+          </div>
+
+          <p class="sub-label">Acceso</p>
+          <ul class="links-list">
+            <li><a href="http://localhost:8080" target="_blank">http://localhost:8080</a></li>
+            <li><a href="http://localhost:8080/swagger-ui/index.html" target="_blank">http://localhost:8080/swagger-ui/index.html</a></li>
+          </ul>
+          <div class="alert">⚠️ En Docker el puerto es <strong>8080</strong></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FLUJO FUNCIONAL -->
+  <div class="section">
+    <div class="section-header">
+      <span class="icon">📬</span>
+      <h2>Flujo funcional</h2>
+    </div>
+    <div class="section-body">
+      <div class="flow">
+        <div class="flow-step"><span class="num">1</span> Usuario solicita validación</div>
+        <div class="flow-step"><span class="num">2</span> Consulta base de datos</div>
+        <div class="flow-step"><span class="num">3</span> Resultado <strong>VALID</strong> / <strong>INVALID</strong></div>
+        <div class="flow-step"><span class="num">4</span> Generación PDF</div>
+        <div class="flow-step"><span class="num">5</span> Envío de correo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRUEBAS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="icon">🧪</span>
+      <h2>Pruebas</h2>
+    </div>
+    <div class="section-body">
+      <ul>
+        <li>Use registros válidos para generar <strong>VALID</strong></li>
+        <li>Verifique logs SMTP</li>
+      </ul>
+
+      <h3>Verificación del correo</h3>
+      <div class="status-row">
+        <div class="status-item" style="color: var(--accent2);">✔️ Correo enviado</div>
+        <div class="status-item" style="color: var(--accent3);">❌ Error SMTP</div>
+      </div>
+
+      <h3>Logs esperados</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">log</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+            Copiar
+          </button>
+        </div>
+        <pre><code>Preparando envío SMTP...
+Certificado enviado correctamente</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIAGNÓSTICO -->
+  <div class="section">
+    <div class="section-header">
+      <span class="icon">🛠️</span>
+      <h2>Diagnóstico</h2>
+    </div>
+    <div class="section-body">
+      <h3>Ver puerto ocupado</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">powershell</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+            Copiar
+          </button>
+        </div>
+        <pre><code>netstat -ano | findstr :8080</code></pre>
+      </div>
+
+      <h3>Ver contenedores</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">powershell</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+            Copiar
+          </button>
+        </div>
+        <pre><code>docker ps -a</code></pre>
+      </div>
+
+      <h3>Ver logs de PostgreSQL</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">powershell</span>
+          <button class="copy-btn" onclick="copyCode(this)">
+            <svg viewBox="0 0 16 16"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25Z"/></svg>
+            Copiar
+          </button>
+        </div>
+        <pre><code>docker logs validacion-postgres</code></pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('code');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    const original = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg viewBox="0 0 16 16" style="width:12px;height:12px;fill:currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg> Copiado`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = original;
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
