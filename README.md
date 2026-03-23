@@ -78,6 +78,14 @@ MAIL_DEBUG=true
 - http://localhost:8081/swagger-ui/index.html
 
 ---
+```powershell
+cd C:\Users\ovargas\IdeaProjects\validacion-frontend
+```
+
+```powershell
+npm run dev
+```
+---
 
 ### 🔹 Modo 2 — PostgreSQL en Docker + App local
 
@@ -119,6 +127,16 @@ docker ps
 
 ---
 
+---
+```powershell
+cd C:\Users\ovargas\IdeaProjects\validacion-frontend
+```
+
+```powershell
+npm run dev
+```
+---
+
 ### 🔹 Modo 3 — Todo en Docker
 
 **Limpieza:**
@@ -144,6 +162,16 @@ docker-compose up --build
 **Acceso:**
 - http://localhost:8080
 - http://localhost:8080/swagger-ui/index.html
+
+---
+```powershell
+cd C:\Users\ovargas\IdeaProjects\validacion-frontend
+```
+
+```powershell
+npm run dev
+```
+---
 
 > ⚠️ **En Docker el puerto es 8080**
 
