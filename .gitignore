@@ -1,29 +1,84 @@
-### Gradle ###
+### =========================
+
+### 🚀 PROYECTO FULLSTACK
+
+### Spring Boot + Frontend + Docker
+
+### =========================
+
+### ===== BACKEND (Gradle / Java) =====
+
 .gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
+*.class
+*.log
 
-### IntelliJ IDEA ###
+# Archivos empaquetados
+
+*.jar
+*.war
+*.ear
+*.nar
+
+### ===== INTELLIJ IDEA =====
+
 .idea/
 *.iws
 *.iml
 *.ipr
 out/
 
-### Spring Boot ###
-*.jar
-*.war
-*.nar
-*.ear
+### ===== FRONTEND (Node) =====
 
-### Logs ###
-*.log
-logs/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
 
-# *** CRÍTICO: nunca subir secretos ***
+# Logs frontend
+
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+### ===== VARIABLES DE ENTORNO =====
+
 .env
 *.env
+.env.local
 
-### OS ###
+### ===== DOCKER =====
+
+docker-compose.override.yml
+
+### ===== LOGS =====
+
+logs/
+*.log
+
+### ===== SISTEMA OPERATIVO =====
+
 .DS_Store
 Thumbs.db
+
+### ===== ARCHIVOS TEMPORALES =====
+
+*.tmp
+*.swp
+*~
+
+### ===== SEGURIDAD =====
+
+# Nunca subir llaves o credenciales
+
+*.pem
+*.key
+*.crt
+*.p12
+
+### ===== OTROS =====
+
+coverage/
+.vscode/
