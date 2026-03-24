@@ -23,7 +23,7 @@ class GenerateCertificatePdfUseCase(
 
         // 4. Generamos el PDF con todos los datos correctos
         return pdfGeneratorPort.generateCertificate(
-            studentName = validation.requesterName,
+            studentName = student?.fullName ?: "Nombre no disponible",
             studentDocument = validation.studentDocument,
             program = programa,
             verificationCode = validation.verificationCode

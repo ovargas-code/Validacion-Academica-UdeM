@@ -31,38 +31,46 @@ class CreateValidationUseCase(
         val letter = documentGeneratorPort.generateLetter(savedRequest, student, result)
 
         var mailResult = MailDeliveryResult.notAttempted("No se envía correo cuando la validación no es válida.")
+        var pdfBytes: ByteArray? = null
 
         if (student != null && result.status == ValidationStatus.VALID) {
-            mailResult = try {
-                val pdfBytes = pdfGeneratorPort.generateCertificate(
+            try {
+                pdfBytes = pdfGeneratorPort.generateCertificate(
                     studentName = student.fullName,
                     studentDocument = student.document,
                     program = student.program,
                     verificationCode = savedRequest.verificationCode
                 )
-
-                mailPort.enviarCertificado(
-                    emailDestino = savedRequest.requesterEmail,
-                    nombreEstudiante = student.fullName,
-                    pdfBytes = pdfBytes
-                )
-
-                logger.info(
-                    "Certificado enviado a {} con código de verificación {}",
-                    savedRequest.requesterEmail,
-                    savedRequest.verificationCode
-                )
-                MailDeliveryResult.sent(savedRequest.requesterEmail)
             } catch (e: Exception) {
-                logger.error(
-                    "No fue posible enviar el certificado a {}. Revise la configuración SMTP y el archivo .env",
-                    savedRequest.requesterEmail,
-                    e
-                )
-                MailDeliveryResult.failed(
-                    savedRequest.requesterEmail,
-                    e.message ?: "Error SMTP no especificado"
-                )
+                logger.error("Error generando PDF para el código {}", savedRequest.verificationCode, e)
+            }
+
+            mailResult = if (pdfBytes != null) {
+                try {
+                    mailPort.enviarCertificado(
+                        emailDestino = savedRequest.requesterEmail,
+                        nombreEstudiante = student.fullName,
+                        pdfBytes = pdfBytes
+                    )
+                    logger.info(
+                        "Certificado enviado a {} con código de verificación {}",
+                        savedRequest.requesterEmail,
+                        savedRequest.verificationCode
+                    )
+                    MailDeliveryResult.sent(savedRequest.requesterEmail)
+                } catch (e: Exception) {
+                    logger.error(
+                        "No fue posible enviar el certificado a {}. Revise la configuración SMTP y el archivo .env",
+                        savedRequest.requesterEmail,
+                        e
+                    )
+                    MailDeliveryResult.failed(
+                        savedRequest.requesterEmail,
+                        e.message ?: "Error SMTP no especificado"
+                    )
+                }
+            } else {
+                MailDeliveryResult.failed(savedRequest.requesterEmail, "No se pudo generar el PDF del certificado")
             }
         }
 
@@ -71,7 +79,8 @@ class CreateValidationUseCase(
             result = result,
             letter = letter,
             student = student,
-            mailResult = mailResult
+            mailResult = mailResult,
+            pdfBytes = pdfBytes
         )
     }
 
@@ -136,7 +145,8 @@ data class ValidationExecutionResponse(
     val result: ValidationResult,
     val letter: String,
     val student: Student?,
-    val mailResult: MailDeliveryResult
+    val mailResult: MailDeliveryResult,
+    val pdfBytes: ByteArray? = null
 )
 
 data class MailDeliveryResult(

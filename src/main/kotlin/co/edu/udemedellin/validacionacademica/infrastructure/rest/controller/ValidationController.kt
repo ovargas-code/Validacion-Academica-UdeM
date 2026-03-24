@@ -2,9 +2,14 @@ package co.edu.udemedellin.validacionacademica.infrastructure.rest.controller
 
 import co.edu.udemedellin.validacionacademica.application.usecase.CreateValidationUseCase
 import co.edu.udemedellin.validacionacademica.domain.model.ValidationRequest
-import co.edu.udemedellin.validacionacademica.domain.ports.PdfGeneratorPort
+import co.edu.udemedellin.validacionacademica.domain.model.ValidationStatus
 import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.CreateValidationRequestDto
+import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.ValidationResponseDto
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpHeaders
@@ -19,21 +24,27 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/validations")
 @Tag(name = "Validaciones", description = "Solicitar validación académica de un estudiante")
 class ValidationController(
-    private val createValidationUseCase: CreateValidationUseCase,
-    private val pdfGeneratorPort: PdfGeneratorPort
+    private val createValidationUseCase: CreateValidationUseCase
 ) {
 
-    @PostMapping("/verify", produces = [MediaType.APPLICATION_PDF_VALUE])
+    @PostMapping("/verify", produces = [MediaType.APPLICATION_PDF_VALUE, MediaType.APPLICATION_JSON_VALUE])
     @Operation(
         summary = "Verificar y generar certificado",
-        description = "Recibe una solicitud de validación, verifica el estado académico del estudiante y devuelve un certificado PDF por descarga directa. También envía el certificado al correo del solicitante."
+        description = "Recibe una solicitud de validación, verifica el estado académico del estudiante y " +
+                "devuelve un certificado PDF si la validación es VÁLIDA, o un JSON con el resultado si no lo es. " +
+                "Cuando el resultado es VÁLIDO, también envía el certificado al correo del solicitante."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Validación exitosa — se devuelve el certificado PDF"),
+        ApiResponse(
+            responseCode = "422", description = "Validación no exitosa (estudiante no encontrado o sin estado válido)",
+            content = [Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = Schema(implementation = ValidationResponseDto::class))]
+        )
     )
     fun verify(
-        // @Valid activa las validaciones @NotBlank y @Email del DTO
         @Valid @RequestBody request: CreateValidationRequestDto
-    ): ResponseEntity<ByteArray> {
+    ): ResponseEntity<*> {
 
-        // Convertimos el DTO de entrada al modelo de dominio
         val domainRequest = ValidationRequest(
             requesterName = request.requesterName,
             requesterEmail = request.requesterEmail,
@@ -41,21 +52,20 @@ class ValidationController(
             validationType = request.validationType
         )
 
-        // Ejecutamos el caso de uso (guarda en BD y envía correo)
         val response = createValidationUseCase.execute(domainRequest)
 
-        // Obtenemos el programa real del estudiante (ya no hardcodeado)
-        val estudiante = response.student
-        val programaReal = estudiante?.program ?: "Programa no registrado"
-        val nombreRealEstudiante = estudiante?.fullName ?: response.request.requesterName
-
-        // Generamos el PDF con los datos correctos
-        val pdfBytes = pdfGeneratorPort.generateCertificate(
-            studentName = nombreRealEstudiante,
-            studentDocument = response.request.studentDocument,
-            program = programaReal,
-            verificationCode = response.request.verificationCode
-        )
+        if (response.result.status != ValidationStatus.VALID || response.pdfBytes == null) {
+            val dto = ValidationResponseDto(
+                requestId = response.request.id,
+                status = response.result.status.name,
+                controlCode = response.result.controlCode,
+                message = response.result.message,
+                letter = response.letter
+            )
+            return ResponseEntity.unprocessableEntity()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(dto)
+        }
 
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_PDF
@@ -64,6 +74,6 @@ class ValidationController(
 
         return ResponseEntity.ok()
             .headers(headers)
-            .body(pdfBytes)
+            .body(response.pdfBytes)
     }
 }

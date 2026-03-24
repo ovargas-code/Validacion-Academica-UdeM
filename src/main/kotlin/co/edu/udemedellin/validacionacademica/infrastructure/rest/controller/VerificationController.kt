@@ -28,9 +28,18 @@ class VerificationController(
         @Parameter(description = "Código de verificación del certificado", example = "UDEM-ABC12345")
         @PathVariable code: String
     ): ResponseEntity<CertificateVerificationResponse> {
-        val result = verificationUseCase.verify(code)
+        val info = verificationUseCase.verify(code)
             ?: return ResponseEntity.notFound().build()
-        return ResponseEntity.ok(result)
+
+        val response = CertificateVerificationResponse(
+            valid = info.valid,
+            studentName = info.studentName,
+            program = info.program,
+            degreeTitle = info.degreeTitle,
+            graduationDate = info.graduationDate,
+            issuedAt = info.issuedAt
+        )
+        return ResponseEntity.ok(response)
     }
 
     @GetMapping("/{code}/pdf")

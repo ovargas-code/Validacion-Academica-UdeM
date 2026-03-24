@@ -12,10 +12,7 @@ open class SecurityConfig {
     open fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             // Desactivamos CSRF porque la API REST usa tokens, no cookies de sesión
-            .csrf { csrf ->
-                csrf.ignoringRequestMatchers("/h2-console/**")
-                csrf.disable()
-            }
+            .csrf { it.disable() }
             // Permitimos que los frames de H2 Console funcionen en el navegador
             .headers { headers ->
                 headers.frameOptions { it.sameOrigin() }

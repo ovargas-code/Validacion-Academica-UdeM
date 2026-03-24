@@ -3,6 +3,7 @@ package co.edu.udemedellin.validacionacademica.infrastructure.documents
 import co.edu.udemedellin.validacionacademica.domain.ports.PdfGeneratorPort
 import com.lowagie.text.*
 import com.lowagie.text.pdf.*
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
@@ -14,6 +15,8 @@ import com.google.zxing.client.j2se.MatrixToImageWriter
 
 @Component
 class PdfDocumentGeneratorAdapter : PdfGeneratorPort {
+
+    private val logger = LoggerFactory.getLogger(PdfDocumentGeneratorAdapter::class.java)
 
     override fun generateCertificate(
         studentName: String,
@@ -134,7 +137,7 @@ class PdfDocumentGeneratorAdapter : PdfGeneratorPort {
             val qr = Image.getInstance(qrStream.toByteArray())
             val (w, h) = scaleFit(qr.width, qr.height, 94f, 94f)
             canvas.addImage(qr, w, 0f, 0f, h, 454f, 90f)
-        } catch (e: Exception) { println(">>> ERROR QR: ${e.message}") }
+        } catch (e: Exception) { logger.warn("Error generando código QR para el certificado: {}", e.message) }
 
         ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
             Phrase("Verificación: $verificationCode", fVerif), 440f, 72f, 0f)
@@ -160,11 +163,11 @@ class PdfDocumentGeneratorAdapter : PdfGeneratorPort {
             val stream = javaClass.getResourceAsStream(path)
                 ?: this::class.java.classLoader.getResourceAsStream(path)
             if (stream != null) {
-                println(">>> IMAGEN OK: $filename encontrada en $path")
+                logger.debug("Imagen '{}' cargada desde '{}'", filename, path)
                 return stream.readBytes()
             }
         }
-        println(">>> IMAGEN NO ENCONTRADA: $filename")
+        logger.warn("Imagen '{}' no encontrada en ninguna ruta de recursos. El certificado se generará sin ella.", filename)
         return null
     }
 
