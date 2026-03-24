@@ -4,6 +4,10 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   security:
     user:
       name: ${ADMIN_USER:admin}
