@@ -227,3 +227,34 @@ docker compose up --build -d
 | `7baf56a` | fix: downgrade Gradle a 8.13 y deshabilitar health indicator de mail |
 | `e12fcc1` | fix: configurar Jackson para serializar fechas en formato ISO (no timestamps) |
 | `b183ab3` | feat: agregar despliegue Docker del frontend React |
+| `ed2df93` | docs: agregar CAMBIOS.md con resumen detallado de todas las modificaciones |
+| `9c8c814` | fix: corregir puerto del proxy de Vite (8081 → 8080) |
+
+---
+
+## 10. Configuración del entorno de desarrollo frontend
+
+### 10.1 Instalación de dependencias
+**Directorio:** `frontend/`
+Las dependencias de Node no estaban instaladas localmente. Se ejecutó `npm install` para generar `node_modules/` con todas las dependencias declaradas en `package.json` (React 19, Vite 8, Axios, React Router, etc.).
+
+### 10.2 Corrección del proxy de Vite
+**Archivo:** `frontend/vite.config.js`
+**Problema:** El proxy del servidor de desarrollo apuntaba a `http://localhost:8081`, pero el backend Spring Boot corre en el puerto **8080**.
+**Corrección:**
+```js
+// Antes
+target: 'http://localhost:8081'
+
+// Después
+target: 'http://localhost:8080'
+```
+Vite detectó el cambio automáticamente y reinició el servidor sin intervención manual.
+
+### 10.3 Servidor de desarrollo activo
+```
+npm run dev
+```
+- **URL:** http://localhost:5173
+- Hot Module Replacement (HMR) activo
+- Proxy `/api/*` → `http://localhost:8080` (backend en Docker)
