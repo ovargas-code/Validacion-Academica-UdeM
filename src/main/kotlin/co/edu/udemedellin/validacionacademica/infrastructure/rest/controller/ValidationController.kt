@@ -54,26 +54,25 @@ class ValidationController(
 
         val response = createValidationUseCase.execute(domainRequest)
 
-        if (response.result.status != ValidationStatus.VALID || response.pdfBytes == null) {
-            val dto = ValidationResponseDto(
-                requestId = response.request.id,
-                status = response.result.status.name,
-                controlCode = response.result.controlCode,
-                message = response.result.message,
-                letter = response.letter
-            )
-            return ResponseEntity.unprocessableEntity()
+        val dto = ValidationResponseDto(
+            requestId = response.request.id,
+            status = response.result.status.name,
+            controlCode = response.result.controlCode,
+            message = response.result.message,
+            letter = response.letter,
+            verificationCode = response.request.verificationCode.ifBlank { null },
+            studentName = response.student?.fullName,
+            validationType = response.request.validationType.name
+        )
+
+        return if (response.result.status == ValidationStatus.VALID) {
+            ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(dto)
+        } else {
+            ResponseEntity.unprocessableEntity()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(dto)
         }
-
-        val headers = HttpHeaders()
-        headers.contentType = MediaType.APPLICATION_PDF
-        val filename = "Certificado_UDEM_${response.request.studentDocument}.pdf"
-        headers.setContentDispositionFormData("attachment", filename)
-
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(response.pdfBytes)
     }
 }

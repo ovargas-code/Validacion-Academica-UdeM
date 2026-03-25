@@ -79,7 +79,7 @@ MAIL_DEBUG=true
 
 ---
 ```powershell
-cd C:\Users\ovargas\IdeaProjects\validacion-frontend
+cd C:\Users\ovargas\IdeaProjects\frontend
 ```
 
 ```powershell
@@ -129,7 +129,7 @@ docker ps
 
 ---
 ```powershell
-cd C:\Users\ovargas\IdeaProjects\validacion-frontend
+cd C:\Users\ovargas\IdeaProjects\frontend
 ```
 
 ```powershell
@@ -165,7 +165,7 @@ docker-compose up --build
 
 ---
 ```powershell
-cd C:\Users\ovargas\IdeaProjects\validacion-frontend
+cd C:\Users\ovargas\IdeaProjects\frontend
 ```
 
 ```powershell

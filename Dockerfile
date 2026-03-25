@@ -12,7 +12,10 @@ COPY gradle/ gradle/
 COPY gradlew build.gradle.kts settings.gradle.kts ./
 
 # Damos permisos de ejecución al wrapper de Gradle
-RUN chmod +x gradlew
+RUN apt-get update && apt-get install -y dos2unix && \
+    dos2unix gradlew && \
+    chmod +x gradlew && \
+    rm -rf /var/lib/apt/lists/*
 
 # Descargamos dependencias (este paso se cachea si build.gradle.kts no cambia)
 RUN ./gradlew dependencies --no-daemon
