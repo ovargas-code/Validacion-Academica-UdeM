@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { listarEstudiantes, buscarEstudiantePorDocumento } from '../api/api';
 
 export default function Historial() {
+  const navigate = useNavigate();
   const [estudiantes, setEstudiantes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,12 +12,23 @@ export default function Historial() {
   const [searchResult, setSearchResult] = useState(null);
   const [searchError, setSearchError] = useState(null);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   useEffect(() => {
+    if (!localStorage.getItem('token')) {
+      navigate('/login');
+      return;
+    }
     listarEstudiantes()
       .then((res) => setEstudiantes(res.data))
       .catch((err) => {
         if (err.response?.status === 401 || err.response?.status === 403) {
-          setError('Acceso restringido. Esta sección requiere autenticación de administrador.');
+          localStorage.removeItem('token');
+          navigate('/login');
+          return;
         } else {
           setError('No se pudo cargar el historial. Verifique que el servidor esté activo.');
         }
@@ -34,7 +47,8 @@ export default function Historial() {
       setSearchResult(res.data);
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
-        setSearchError('Acceso restringido. Se requiere autenticación de administrador.');
+        localStorage.removeItem('token');
+        navigate('/login');
       } else if (err.response?.status === 404) {
         setSearchError('No se encontró estudiante con ese documento.');
       } else {
@@ -53,9 +67,14 @@ export default function Historial() {
 
   return (
     <div className="page fade-in">
-      <div className="page-header">
-        <h1>📊 Historial de Estudiantes</h1>
-        <p>Consulta todos los estudiantes registrados o busca por documento.</p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1>📊 Historial de Estudiantes</h1>
+          <p>Consulta todos los estudiantes registrados o busca por documento.</p>
+        </div>
+        <button className="btn btn-outline" onClick={handleLogout} style={{ marginTop: 4 }}>
+          Cerrar sesión
+        </button>
       </div>
 
       {/* BUSCAR */}
