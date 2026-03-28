@@ -1,10 +1,9 @@
 package co.edu.udemedellin.validacionacademica.infrastructure.rest.controller
 
-import co.edu.udemedellin.validacionacademica.application.usecase.CreateValidationUseCase
+import co.edu.udemedellin.validacionacademica.application.usecase.*
 import co.edu.udemedellin.validacionacademica.domain.model.ValidationRequest
-import co.edu.udemedellin.validacionacademica.domain.model.ValidationStatus
+import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.ConfirmVerificationRequest
 import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.CreateValidationRequestDto
-import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.ValidationResponseDto
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -13,66 +12,72 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/validations")
-@Tag(name = "Validaciones", description = "Solicitar validación académica de un estudiante")
+@Tag(name = "Validaciones", description = "Flujo de validación académica con verificación por correo")
 class ValidationController(
-    private val createValidationUseCase: CreateValidationUseCase
+    private val initiateValidationUseCase: InitiateValidationUseCase,
+    private val confirmEmailVerificationUseCase: ConfirmEmailVerificationUseCase
 ) {
 
-    @PostMapping("/verify", produces = [MediaType.APPLICATION_PDF_VALUE, MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/initiate")
     @Operation(
-        summary = "Verificar y generar certificado",
-        description = "Recibe una solicitud de validación, verifica el estado académico del estudiante y " +
-                "devuelve un certificado PDF si la validación es VÁLIDA, o un JSON con el resultado si no lo es. " +
-                "Cuando el resultado es VÁLIDO, también envía el certificado al correo del solicitante."
+        summary = "Paso 1 — Iniciar validación",
+        description = "Verifica el estado académico del estudiante. Si es VÁLIDO, envía un código OTP de 6 dígitos " +
+                "al correo del solicitante y retorna un token de sesión para usar en el Paso 2. " +
+                "Si no es VÁLIDO, retorna el resultado directamente sin enviar código."
     )
     @ApiResponses(
-        ApiResponse(responseCode = "200", description = "Validación exitosa — se devuelve el certificado PDF"),
-        ApiResponse(
-            responseCode = "422", description = "Validación no exitosa (estudiante no encontrado o sin estado válido)",
-            content = [Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = Schema(implementation = ValidationResponseDto::class))]
-        )
+        ApiResponse(responseCode = "200", description = "Validación iniciada. Campo 'token' presente solo cuando status=VALID.")
     )
-    fun verify(
-        @Valid @RequestBody request: CreateValidationRequestDto
-    ): ResponseEntity<*> {
-
+    fun initiate(@Valid @RequestBody request: CreateValidationRequestDto): ResponseEntity<InitiateValidationResult> {
         val domainRequest = ValidationRequest(
             requesterName = request.requesterName,
             requesterEmail = request.requesterEmail,
             studentDocument = request.studentDocument,
             validationType = request.validationType
         )
+        val result = initiateValidationUseCase.execute(domainRequest)
+        return ResponseEntity.ok(result)
+    }
 
-        val response = createValidationUseCase.execute(domainRequest)
-
-        val dto = ValidationResponseDto(
-            requestId = response.request.id,
-            status = response.result.status.name,
-            controlCode = response.result.controlCode,
-            message = response.result.message,
-            letter = response.letter,
-            verificationCode = response.request.verificationCode.ifBlank { null },
-            studentName = response.student?.fullName,
-            validationType = response.request.validationType.name
+    @PostMapping("/confirm", produces = [MediaType.APPLICATION_PDF_VALUE, MediaType.APPLICATION_JSON_VALUE])
+    @Operation(
+        summary = "Paso 2 — Confirmar correo y descargar certificado",
+        description = "Valida el código OTP recibido por correo. Si es correcto y no ha expirado, " +
+                "genera el certificado PDF, lo envía al correo verificado y lo retorna para descarga inmediata."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Código válido — retorna el certificado PDF"),
+        ApiResponse(
+            responseCode = "422", description = "Código incorrecto, expirado o ya utilizado",
+            content = [Content(mediaType = MediaType.APPLICATION_JSON_VALUE)]
         )
-
-        return if (response.result.status == ValidationStatus.VALID) {
-            ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(dto)
-        } else {
-            ResponseEntity.unprocessableEntity()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(dto)
+    )
+    fun confirm(@Valid @RequestBody request: ConfirmVerificationRequest): ResponseEntity<*> {
+        return when (val result = confirmEmailVerificationUseCase.execute(request.token, request.code)) {
+            is ConfirmResult.Success -> {
+                val headers = HttpHeaders().apply {
+                    contentType = MediaType.APPLICATION_PDF
+                    setContentDispositionFormData("attachment", "Certificado_${result.verificationCode}.pdf")
+                }
+                ResponseEntity.ok().headers(headers).body(result.pdfBytes)
+            }
+            is ConfirmResult.Error -> {
+                val status = when (result.code) {
+                    "TOKEN_EXPIRED", "TOKEN_ALREADY_USED" -> HttpStatus.GONE
+                    "INVALID_CODE" -> HttpStatus.UNPROCESSABLE_ENTITY
+                    else -> HttpStatus.BAD_REQUEST
+                }
+                ResponseEntity.status(status)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(mapOf("code" to result.code, "message" to result.message))
+            }
         }
     }
 }

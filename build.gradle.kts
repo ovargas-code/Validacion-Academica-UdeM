@@ -28,7 +28,12 @@ dependencies {
 
     // --- FRONTEND Y SEGURIDAD (LAS NUEVAS) ---
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation("org.springframework.boot:spring-boot-starter-security") // <-- ESTA ES LA CLAVE
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server") // JWT
+
+    // --- RATE LIMITING ---
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
+    implementation("com.github.ben-manes.caffeine:caffeine")
 
     // --- KOTLIN Y JSON ---
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -59,6 +64,24 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// Carga variables del archivo .env como env vars del proceso bootRun
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        envFile.forEachLine { line ->
+            val trimmed = line.trim()
+            if (trimmed.isNotBlank() && !trimmed.startsWith("#")) {
+                val idx = trimmed.indexOf('=')
+                if (idx > 0) {
+                    val key = trimmed.substring(0, idx).trim()
+                    val value = trimmed.substring(idx + 1).trim()
+                    environment(key, value)
+                }
+            }
+        }
+    }
 }
 
 kotlin {

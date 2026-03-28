@@ -1,9 +1,12 @@
 package co.edu.udemedellin.validacionacademica.infrastructure.rest.exception
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import jakarta.validation.ConstraintViolationException
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -19,6 +22,18 @@ data class ApiError(
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
+
+    @ExceptionHandler(AuthenticationException::class)
+    fun handleAuthenticationException(ex: AuthenticationException): ResponseEntity<ApiError> {
+        val apiError = ApiError(
+            status = HttpStatus.UNAUTHORIZED.value(),
+            error = "No autorizado",
+            message = "Credenciales incorrectas"
+        )
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError)
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationErrors(ex: MethodArgumentNotValidException): ResponseEntity<ApiError> {
@@ -79,8 +94,24 @@ class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(apiError)
     }
 
+    @ExceptionHandler(ConstraintViolationException::class)
+    fun handleConstraintViolation(ex: ConstraintViolationException): ResponseEntity<ApiError> {
+        val details = ex.constraintViolations.map { violation ->
+            val field = violation.propertyPath.toList().lastOrNull()?.name ?: violation.propertyPath.toString()
+            "$field: ${violation.message}"
+        }
+        val apiError = ApiError(
+            status = HttpStatus.BAD_REQUEST.value(),
+            error = "Parámetro inválido",
+            message = "Uno o más parámetros de la solicitud tienen valores incorrectos",
+            details = details
+        )
+        return ResponseEntity.badRequest().body(apiError)
+    }
+
     @ExceptionHandler(Exception::class)
     fun handleGenericError(ex: Exception): ResponseEntity<ApiError> {
+        log.error("Error inesperado: ${ex.javaClass.simpleName} — ${ex.message}", ex)
         val apiError = ApiError(
             status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
             error = "Error interno del servidor",

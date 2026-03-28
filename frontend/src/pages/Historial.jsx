@@ -13,7 +13,13 @@ export default function Historial() {
   useEffect(() => {
     listarEstudiantes()
       .then((res) => setEstudiantes(res.data))
-      .catch(() => setError('No se pudo cargar el historial.'))
+      .catch((err) => {
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setError('Acceso restringido. Esta sección requiere autenticación de administrador.');
+        } else {
+          setError('No se pudo cargar el historial. Verifique que el servidor esté activo.');
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -27,9 +33,13 @@ export default function Historial() {
       const res = await buscarEstudiantePorDocumento(search.trim());
       setSearchResult(res.data);
     } catch (err) {
-      setSearchError(err.response?.status === 404
-        ? 'No se encontró estudiante con ese documento.'
-        : 'Error al buscar.');
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setSearchError('Acceso restringido. Se requiere autenticación de administrador.');
+      } else if (err.response?.status === 404) {
+        setSearchError('No se encontró estudiante con ese documento.');
+      } else {
+        setSearchError('Error al buscar. Verifique que el servidor esté activo.');
+      }
     } finally {
       setSearching(false);
     }

@@ -1,5 +1,7 @@
 package co.edu.udemedellin.validacionacademica.application.usecase
 
+import co.edu.udemedellin.validacionacademica.domain.model.StudentStatus
+import co.edu.udemedellin.validacionacademica.domain.model.ValidationType
 import co.edu.udemedellin.validacionacademica.domain.ports.StudentRepositoryPort
 import co.edu.udemedellin.validacionacademica.domain.ports.ValidationRepositoryPort
 import org.springframework.stereotype.Service
@@ -28,8 +30,13 @@ class VerifyCertificateUseCase(
             ?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
             ?: "No registrada"
 
+        val valid = when (validation.validationType) {
+            ValidationType.DEGREE -> student.status == StudentStatus.GRADUATED
+            ValidationType.ENROLLMENT -> student.status == StudentStatus.ACTIVE
+        }
+
         return CertificateInfo(
-            valid = true,
+            valid = valid,
             studentName = student.fullName,
             program = student.program,
             degreeTitle = student.degreeTitle,

@@ -162,6 +162,7 @@ docker-compose up --build
 **Acceso:**
 - http://localhost:8080
 - http://localhost:8080/swagger-ui/index.html
+- http://localhost:3000/
 
 ---
 ```powershell

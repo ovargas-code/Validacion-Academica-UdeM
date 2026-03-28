@@ -6,14 +6,17 @@ import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.Certificat
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Pattern
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1/verificaciones")
 @Tag(name = "Verificaciones", description = "Verificar autenticidad de certificados emitidos")
+@Validated
 class VerificationController(
     private val verificationUseCase: VerifyCertificateUseCase,
     private val generateCertificatePdfUseCase: GenerateCertificatePdfUseCase
@@ -26,7 +29,9 @@ class VerificationController(
     )
     fun verify(
         @Parameter(description = "Código de verificación del certificado", example = "UDEM-ABC12345")
-        @PathVariable code: String
+        @PathVariable
+        @Pattern(regexp = "^[A-Z0-9\\-]{6,30}$", message = "Código de verificación con formato inválido")
+        code: String
     ): ResponseEntity<CertificateVerificationResponse> {
         val info = verificationUseCase.verify(code)
             ?: return ResponseEntity.notFound().build()
@@ -49,7 +54,9 @@ class VerificationController(
     )
     fun downloadPdf(
         @Parameter(description = "Código de verificación del certificado", example = "UDEM-ABC12345")
-        @PathVariable code: String
+        @PathVariable
+        @Pattern(regexp = "^[A-Z0-9\\-]{6,30}$", message = "Código de verificación con formato inválido")
+        code: String
     ): ResponseEntity<ByteArray> {
         val pdfBytes = generateCertificatePdfUseCase.execute(code)
             ?: return ResponseEntity.notFound().build()

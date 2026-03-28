@@ -9,15 +9,20 @@ import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.StudentRes
 import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.toResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Pattern
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1/students")
 @Tag(name = "Estudiantes", description = "Gestión del registro de estudiantes")
+@SecurityRequirement(name = "bearerAuth")
+@Validated
 class StudentController(
     private val createStudentUseCase: CreateStudentUseCase,
     private val getStudentByDocumentUseCase: GetStudentByDocumentUseCase,
@@ -50,7 +55,9 @@ class StudentController(
     )
     fun findByDocument(
         @Parameter(description = "Número de documento del estudiante", example = "10350001")
-        @PathVariable document: String
+        @PathVariable
+        @Pattern(regexp = "^[A-Za-z0-9\\-]{1,20}$", message = "Documento con formato inválido")
+        document: String
     ): ResponseEntity<StudentResponse> {
         val student = getStudentByDocumentUseCase.execute(document)
             ?: return ResponseEntity.notFound().build()
