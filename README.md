@@ -121,7 +121,9 @@ Ideal para desarrollo rápido sin Docker.
 ```powershell
 # Backend
 .\gradlew.bat bootRun --args="--server.port=8081"
+```
 
+```powershell
 # Frontend (en otra terminal)
 cd frontend
 npm install
@@ -164,7 +166,7 @@ Para aplicar cambios de código:
 ```powershell
 docker compose down
 docker compose build --no-cache
-docker compose up
+docker compose up --build
 ```
 
 **Accesos:**
