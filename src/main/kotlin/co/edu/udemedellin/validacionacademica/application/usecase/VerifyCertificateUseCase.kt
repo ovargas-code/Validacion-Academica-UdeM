@@ -5,6 +5,7 @@ import co.edu.udemedellin.validacionacademica.domain.model.ValidationType
 import co.edu.udemedellin.validacionacademica.domain.ports.StudentRepositoryPort
 import co.edu.udemedellin.validacionacademica.domain.ports.ValidationRepositoryPort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -22,6 +23,7 @@ class VerifyCertificateUseCase(
     private val validationRepositoryPort: ValidationRepositoryPort,
     private val studentRepositoryPort: StudentRepositoryPort
 ) {
+    @Transactional(readOnly = true)
     fun verify(code: String): CertificateInfo? {
         val validation = validationRepositoryPort.findByVerificationCode(code) ?: return null
         val student = studentRepositoryPort.findByDocument(validation.studentDocument) ?: return null

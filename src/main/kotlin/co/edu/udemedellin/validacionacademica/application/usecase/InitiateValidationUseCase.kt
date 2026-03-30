@@ -5,6 +5,7 @@ import co.edu.udemedellin.validacionacademica.domain.ports.*
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.security.SecureRandom
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -23,11 +24,17 @@ class InitiateValidationUseCase(
     private val log = LoggerFactory.getLogger(InitiateValidationUseCase::class.java)
     private val random = SecureRandom()
 
+    @Transactional
     fun execute(request: ValidationRequest): InitiateValidationResult {
         val generatedCode = "UDEM-" + UUID.randomUUID().toString().substring(0, 8).uppercase()
         val savedRequest = validationRepositoryPort.save(request.copy(verificationCode = generatedCode))
+        val requestId = savedRequest.id
+            ?: return InitiateValidationResult(
+                token = null, status = "ERROR",
+                message = "Error interno al procesar la solicitud.", controlCode = "", maskedEmail = null
+            )
         val student = studentRepositoryPort.findByDocument(savedRequest.studentDocument)
-        val result = buildResult(savedRequest.id!!, savedRequest.validationType, student)
+        val result = buildResult(requestId, savedRequest.validationType, student)
 
         meterRegistry.counter(
             "validations.initiated",

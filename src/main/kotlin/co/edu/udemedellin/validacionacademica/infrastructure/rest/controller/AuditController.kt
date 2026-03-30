@@ -7,6 +7,7 @@ import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.toResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 class AuditController(
     private val listAuditEventsUseCase: ListAuditEventsUseCase
 ) {
+    private val log = LoggerFactory.getLogger(AuditController::class.java)
 
     @GetMapping
     @Operation(
@@ -33,6 +35,7 @@ El parámetro limit acepta entre 1 y 500 (por defecto 100)."""
         @RequestParam(required = false) action: AuditAction?,
         @RequestParam(defaultValue = "100") limit: Int
     ): ResponseEntity<List<AuditEventResponse>> {
+        log.info("Consultar auditoría: performedBy={}, action={}, limit={}", performedBy, action, limit)
         val events = listAuditEventsUseCase.execute(
             performedBy = performedBy,
             action = action,

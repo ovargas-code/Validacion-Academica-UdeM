@@ -4,6 +4,7 @@ import co.edu.udemedellin.validacionacademica.domain.ports.PdfGeneratorPort
 import co.edu.udemedellin.validacionacademica.domain.ports.StudentRepositoryPort
 import co.edu.udemedellin.validacionacademica.domain.ports.ValidationRepositoryPort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class GenerateCertificatePdfUseCase(
@@ -11,6 +12,7 @@ class GenerateCertificatePdfUseCase(
     private val studentRepositoryPort: StudentRepositoryPort, // <-- Agregamos este puerto
     private val pdfGeneratorPort: PdfGeneratorPort
 ) {
+    @Transactional(readOnly = true)
     fun execute(code: String): ByteArray? {
         // 1. Buscamos la solicitud de validación por código
         val validation = validationRepositoryPort.findByVerificationCode(code) ?: return null

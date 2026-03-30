@@ -4,11 +4,13 @@ import co.edu.udemedellin.validacionacademica.domain.model.AuditAction
 import co.edu.udemedellin.validacionacademica.domain.model.AuditEvent
 import co.edu.udemedellin.validacionacademica.domain.ports.AuditRepositoryPort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ListAuditEventsUseCase(
     private val auditRepositoryPort: AuditRepositoryPort
 ) {
+    @Transactional(readOnly = true)
     fun execute(
         performedBy: String? = null,
         action: AuditAction? = null,

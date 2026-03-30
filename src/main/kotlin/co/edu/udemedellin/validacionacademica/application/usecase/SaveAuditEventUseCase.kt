@@ -5,6 +5,8 @@ import co.edu.udemedellin.validacionacademica.domain.model.AuditEvent
 import co.edu.udemedellin.validacionacademica.domain.ports.AuditRepositoryPort
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class SaveAuditEventUseCase(
@@ -12,6 +14,7 @@ class SaveAuditEventUseCase(
 ) {
     private val log = LoggerFactory.getLogger(SaveAuditEventUseCase::class.java)
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun execute(
         action: AuditAction,
         performedBy: String,

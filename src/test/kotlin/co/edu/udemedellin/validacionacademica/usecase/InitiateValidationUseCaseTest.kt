@@ -3,6 +3,7 @@ package co.edu.udemedellin.validacionacademica.usecase
 import co.edu.udemedellin.validacionacademica.application.usecase.InitiateValidationUseCase
 import co.edu.udemedellin.validacionacademica.domain.model.*
 import co.edu.udemedellin.validacionacademica.domain.ports.*
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -13,12 +14,14 @@ class InitiateValidationUseCaseTest {
     private val studentRepositoryPort: StudentRepositoryPort = mockk()
     private val emailVerificationRepositoryPort: EmailVerificationRepositoryPort = mockk()
     private val mailPort: MailPort = mockk()
+    private val meterRegistry = SimpleMeterRegistry()
 
     private val useCase = InitiateValidationUseCase(
         validationRepositoryPort,
         studentRepositoryPort,
         emailVerificationRepositoryPort,
-        mailPort
+        mailPort,
+        meterRegistry
     )
 
     private val baseRequest = ValidationRequest(

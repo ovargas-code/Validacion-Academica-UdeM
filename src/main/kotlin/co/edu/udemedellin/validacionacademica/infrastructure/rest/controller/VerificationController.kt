@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Pattern
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -21,6 +22,7 @@ class VerificationController(
     private val verificationUseCase: VerifyCertificateUseCase,
     private val generateCertificatePdfUseCase: GenerateCertificatePdfUseCase
 ) {
+    private val log = LoggerFactory.getLogger(VerificationController::class.java)
 
     @GetMapping("/{code}")
     @Operation(
@@ -33,6 +35,7 @@ class VerificationController(
         @Pattern(regexp = "^[A-Z0-9\\-]{6,30}$", message = "Código de verificación con formato inválido")
         code: String
     ): ResponseEntity<CertificateVerificationResponse> {
+        log.info("Verificar certificado: código={}", code)
         val info = verificationUseCase.verify(code)
             ?: return ResponseEntity.notFound().build()
 
@@ -58,6 +61,7 @@ class VerificationController(
         @Pattern(regexp = "^[A-Z0-9\\-]{6,30}$", message = "Código de verificación con formato inválido")
         code: String
     ): ResponseEntity<ByteArray> {
+        log.info("Descargar PDF certificado: código={}", code)
         val pdfBytes = generateCertificatePdfUseCase.execute(code)
             ?: return ResponseEntity.notFound().build()
 

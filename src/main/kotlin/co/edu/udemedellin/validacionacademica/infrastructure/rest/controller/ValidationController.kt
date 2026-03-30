@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -24,6 +25,7 @@ class ValidationController(
     private val initiateValidationUseCase: InitiateValidationUseCase,
     private val confirmEmailVerificationUseCase: ConfirmEmailVerificationUseCase
 ) {
+    private val log = LoggerFactory.getLogger(ValidationController::class.java)
 
     @PostMapping("/initiate")
     @Operation(
@@ -36,6 +38,7 @@ class ValidationController(
         ApiResponse(responseCode = "200", description = "Validación iniciada. Campo 'token' presente solo cuando status=VALID.")
     )
     fun initiate(@Valid @RequestBody request: CreateValidationRequestDto): ResponseEntity<InitiateValidationResult> {
+        log.info("Iniciar validación: tipo={}, doc={}", request.validationType, request.studentDocument)
         val domainRequest = ValidationRequest(
             requesterName = request.requesterName,
             requesterEmail = request.requesterEmail,
@@ -60,6 +63,7 @@ class ValidationController(
         )
     )
     fun confirm(@Valid @RequestBody request: ConfirmVerificationRequest): ResponseEntity<*> {
+        log.info("Confirmar verificación OTP: token={}", request.token)
         return when (val result = confirmEmailVerificationUseCase.execute(request.token, request.code)) {
             is ConfirmResult.Success -> {
                 val headers = HttpHeaders().apply {

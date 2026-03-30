@@ -8,31 +8,39 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "validation_requests")
+@Table(
+    name = "validation_requests",
+    indexes = [
+        Index(name = "idx_validation_student_document", columnList = "student_document"),
+        Index(name = "idx_validation_verification_code", columnList = "verification_code", unique = true)
+    ]
+)
 class ValidationRequestEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 150)
     var requesterName: String = "",
-    @Column(nullable = false)
+
+    @Column(nullable = false, length = 254)
     var requesterEmail: String = "",
-    @Column(nullable = false)
+
+    @Column(name = "student_document", nullable = false, length = 20)
     var studentDocument: String = "",
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     var validationType: ValidationType = ValidationType.DEGREE,
 
     @Column(nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(), // <-- ¡No olvides poner esta coma!
+    var createdAt: LocalDateTime = LocalDateTime.now(),
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "verification_code", nullable = false, unique = true, length = 20)
     var verificationCode: String = ""
-
 )

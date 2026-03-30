@@ -13,6 +13,7 @@ import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.CreateStud
 import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.StudentPageResponse
 import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.StudentResponse
 import co.edu.udemedellin.validacionacademica.infrastructure.rest.dto.toResponse
+import org.slf4j.LoggerFactory
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -41,6 +42,7 @@ class StudentController(
     private val importStudentsUseCase: ImportStudentsUseCase,
     private val saveAuditEventUseCase: SaveAuditEventUseCase
 ) {
+    private val log = LoggerFactory.getLogger(StudentController::class.java)
 
     @PostMapping
     @Operation(
@@ -51,6 +53,7 @@ class StudentController(
         @Valid @RequestBody request: CreateStudentRequest,
         authentication: Authentication
     ): ResponseEntity<StudentResponse> {
+        log.info("Crear estudiante: doc={}, usuario={}", request.document, authentication.name)
         val student = Student(
             document = request.document,
             fullName = request.fullName,
@@ -81,6 +84,7 @@ class StudentController(
         @Pattern(regexp = "^[A-Za-z0-9\\-]{1,20}$", message = "Documento con formato inválido")
         document: String
     ): ResponseEntity<StudentResponse> {
+        log.info("Consultar estudiante: doc={}", document)
         val student = getStudentByDocumentUseCase.execute(document)
             ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(student.toResponse())
@@ -96,6 +100,7 @@ class StudentController(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
     ): ResponseEntity<StudentPageResponse> {
+        log.info("Listar estudiantes: page={}, size={}", page, size)
         return ResponseEntity.ok(listStudentsUseCase.execute(page, size).toResponse())
     }
 
@@ -112,6 +117,7 @@ class StudentController(
         @Valid @RequestBody request: CreateStudentRequest,
         authentication: Authentication
     ): ResponseEntity<StudentResponse> {
+        log.info("Actualizar estudiante: doc={}, usuario={}", document, authentication.name)
         val student = Student(
             document = document,
             fullName = request.fullName,
@@ -144,6 +150,7 @@ class StudentController(
         document: String,
         authentication: Authentication
     ): ResponseEntity<Void> {
+        log.info("Eliminar estudiante: doc={}, usuario={}", document, authentication.name)
         val deleted = deleteStudentUseCase.execute(document)
         if (deleted) {
             saveAuditEventUseCase.execute(
@@ -170,6 +177,7 @@ graduationDate en formato yyyy-MM-dd (opcional)"""
         @RequestParam("file") file: MultipartFile,
         authentication: Authentication
     ): ResponseEntity<Any> {
+        log.info("Importar CSV: archivo={}, usuario={}", file.originalFilename, authentication.name)
         if (file.isEmpty) {
             return ResponseEntity.badRequest().body(mapOf("message" to "El archivo CSV no puede estar vacío"))
         }

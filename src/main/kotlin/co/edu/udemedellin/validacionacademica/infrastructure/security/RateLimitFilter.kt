@@ -49,7 +49,8 @@ class RateLimitFilter(private val rateLimitProperties: RateLimitProperties) : On
         }
 
         val clientIp = resolveClientIp(request)
-        val bucket = buckets.get("${matched.prefix}|$clientIp") { createBucket(matched) }!!
+        val bucket = buckets.get("${matched.prefix}|$clientIp") { createBucket(matched) }
+            ?: throw IllegalStateException("No se pudo obtener o crear el bucket de rate-limiting para $clientIp")
 
         val probe = bucket.tryConsumeAndReturnRemaining(1)
 

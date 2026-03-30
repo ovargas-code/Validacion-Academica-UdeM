@@ -3,6 +3,7 @@ package co.edu.udemedellin.validacionacademica.infrastructure.rest.dto
 import co.edu.udemedellin.validacionacademica.domain.model.AcademicLevel
 import co.edu.udemedellin.validacionacademica.domain.model.StudentStatus
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
@@ -21,7 +22,10 @@ data class CreateStudentRequest(
     @field:Size(max = 200, message = "El programa no puede superar los 200 caracteres")
     val program: String,
 
+    @field:NotNull(message = "El nivel académico es obligatorio (TECNICO, TECNOLOGICO, PREGRADO, ESPECIALIZACION, MAESTRIA, DOCTORADO)")
     val academicLevel: AcademicLevel,
+
+    @field:NotNull(message = "El estado del estudiante es obligatorio (ACTIVO, GRADUADO, INACTIVO, SUSPENDIDO)")
     val status: StudentStatus,
 
     @field:Size(max = 200, message = "El título no puede superar los 200 caracteres")

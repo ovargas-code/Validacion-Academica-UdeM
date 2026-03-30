@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @Service
@@ -22,6 +23,7 @@ class ConfirmEmailVerificationUseCase(
         .description("Tiempo de generación del certificado PDF")
         .publishPercentiles(0.5, 0.95, 0.99)
 
+    @Transactional
     fun execute(token: String, code: String): ConfirmResult {
         val verification = emailVerificationRepositoryPort.findByToken(token)
             ?: return otpFailure("TOKEN_NOT_FOUND", "El token de verificación no es válido.")
@@ -36,7 +38,9 @@ class ConfirmEmailVerificationUseCase(
             return otpFailure("INVALID_CODE", "El código ingresado es incorrecto.")
 
         meterRegistry.counter("otp.verifications", "result", "success").increment()
-        emailVerificationRepositoryPort.markAsUsed(verification.id!!)
+        val verificationId = verification.id
+            ?: return ConfirmResult.Error("INTERNAL_ERROR", "Error interno procesando la verificación.")
+        emailVerificationRepositoryPort.markAsUsed(verificationId)
 
         val student = studentRepositoryPort.findByDocument(verification.studentDocument)
             ?: return ConfirmResult.Error("STUDENT_NOT_FOUND", "No se encontró el estudiante asociado.")
@@ -52,7 +56,11 @@ class ConfirmEmailVerificationUseCase(
                     program = student.program,
                     verificationCode = validationRequest.verificationCode
                 )
-            }!!
+            } ?: run {
+                log.error("El generador de PDF retornó null para {}", validationRequest.verificationCode)
+                meterRegistry.counter("certificates.issued", "result", "error").increment()
+                return ConfirmResult.Error("PDF_ERROR", "Error generando el certificado PDF.")
+            }
         } catch (e: Exception) {
             log.error("Error generando PDF para {}", validationRequest.verificationCode, e)
             meterRegistry.counter("certificates.issued", "result", "error").increment()

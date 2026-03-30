@@ -154,10 +154,13 @@ open class SecurityConfig(
                     "/swagger-ui.html",
                     "/actuator/health",
                     "/actuator/info",
-                    "/actuator/prometheus", // Prometheus scrapes sin JWT; restringir por IP en producción
                     "/",
                     "/verificar"
                 ).permitAll()
+
+                // Métricas Prometheus — requiere JWT de ADMIN
+                // Configurar el scraper con: bearer_token: <JWT del admin>
+                auth.requestMatchers("/actuator/prometheus").hasAuthority("ROLE_ADMIN")
 
                 // Validaciones públicas (protegidas por RateLimitFilter)
                 auth.requestMatchers("/api/validations/**").permitAll()

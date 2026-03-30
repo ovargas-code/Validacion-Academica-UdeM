@@ -7,6 +7,7 @@ import co.edu.udemedellin.validacionacademica.infrastructure.security.JwtTokenSe
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -23,6 +24,7 @@ class AuthController(
     private val jwtTokenService: JwtTokenService,
     private val jwtProperties: JwtProperties
 ) {
+    private val log = LoggerFactory.getLogger(AuthController::class.java)
 
     @PostMapping("/login")
     @Operation(
@@ -32,10 +34,12 @@ class AuthController(
                 "Incluir en requests posteriores como: Authorization: Bearer <token>"
     )
     fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity<LoginResponse> {
+        log.info("Intento de login para usuario: {}", request.username)
         val authentication = authenticationManager.authenticate(
             UsernamePasswordAuthenticationToken(request.username, request.password)
         )
         val token = jwtTokenService.generateToken(authentication)
+        log.info("Login exitoso para usuario: {}", request.username)
         return ResponseEntity.ok(
             LoginResponse(
                 accessToken = token,

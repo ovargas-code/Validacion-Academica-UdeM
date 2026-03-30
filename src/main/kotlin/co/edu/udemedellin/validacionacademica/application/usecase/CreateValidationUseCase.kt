@@ -8,6 +8,7 @@ import co.edu.udemedellin.validacionacademica.domain.ports.StudentRepositoryPort
 import co.edu.udemedellin.validacionacademica.domain.ports.ValidationRepositoryPort
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -22,12 +23,15 @@ class CreateValidationUseCase(
 ) {
     private val logger = LoggerFactory.getLogger(CreateValidationUseCase::class.java)
 
+    @Transactional
     fun execute(request: ValidationRequest): ValidationExecutionResponse {
         val generatedCode = "UDEM-" + UUID.randomUUID().toString().substring(0, 8).uppercase()
         val requestWithCode = request.copy(verificationCode = generatedCode)
         val savedRequest = validationRepositoryPort.save(requestWithCode)
+        val requestId = savedRequest.id
+            ?: throw IllegalStateException("El repositorio no asignó un ID a la solicitud de validación guardada.")
         val student = studentRepositoryPort.findByDocument(savedRequest.studentDocument)
-        val result = buildResult(savedRequest.id!!, savedRequest.validationType, student)
+        val result = buildResult(requestId, savedRequest.validationType, student)
         val letter = documentGeneratorPort.generateLetter(savedRequest, student, result)
 
         var mailResult = MailDeliveryResult.notAttempted("No se envía correo cuando la validación no es válida.")

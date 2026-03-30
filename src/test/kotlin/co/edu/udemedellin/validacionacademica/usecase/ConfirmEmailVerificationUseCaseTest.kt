@@ -4,6 +4,7 @@ import co.edu.udemedellin.validacionacademica.application.usecase.ConfirmEmailVe
 import co.edu.udemedellin.validacionacademica.application.usecase.ConfirmResult
 import co.edu.udemedellin.validacionacademica.domain.model.*
 import co.edu.udemedellin.validacionacademica.domain.ports.*
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -16,13 +17,15 @@ class ConfirmEmailVerificationUseCaseTest {
     private val validationRepositoryPort: ValidationRepositoryPort = mockk()
     private val pdfGeneratorPort: PdfGeneratorPort = mockk()
     private val mailPort: MailPort = mockk()
+    private val meterRegistry = SimpleMeterRegistry()
 
     private val useCase = ConfirmEmailVerificationUseCase(
         emailVerificationRepositoryPort,
         studentRepositoryPort,
         validationRepositoryPort,
         pdfGeneratorPort,
-        mailPort
+        mailPort,
+        meterRegistry
     )
 
     private val validVerification = EmailVerification(
