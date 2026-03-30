@@ -25,7 +25,7 @@ class CreateStudentUseCaseTest {
             fullName = "Ana Gómez",
             program = "Medicina",
             academicLevel = AcademicLevel.PREGRADO,
-            status = StudentStatus.ACTIVE
+            status = StudentStatus.ACTIVO
         )
         val estudianteGuardado = estudiante.copy(id = 1L)
 

@@ -54,7 +54,7 @@ class CreateValidationUseCaseTest {
         val estudiante = Student(
             id = 1L, document = "10350003", fullName = "María Torres",
             program = "Derecho", academicLevel = AcademicLevel.PREGRADO,
-            status = StudentStatus.GRADUATED, degreeTitle = "Abogada"
+            status = StudentStatus.GRADUADO, degreeTitle = "Abogada"
         )
 
         every { validationRepo.save(any()) } returns savedRequest

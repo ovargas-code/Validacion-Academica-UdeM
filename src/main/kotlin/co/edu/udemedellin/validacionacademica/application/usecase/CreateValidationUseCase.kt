@@ -102,7 +102,7 @@ class CreateValidationUseCase(
 
         return when (validationType) {
             ValidationType.DEGREE -> {
-                if (student.status == StudentStatus.GRADUATED) {
+                if (student.status == StudentStatus.GRADUADO) {
                     ValidationResult(
                         requestId,
                         ValidationStatus.VALID,
@@ -120,7 +120,7 @@ class CreateValidationUseCase(
             }
 
             ValidationType.ENROLLMENT -> {
-                if (student.status == StudentStatus.ACTIVE) {
+                if (student.status == StudentStatus.ACTIVO) {
                     ValidationResult(
                         requestId,
                         ValidationStatus.VALID,

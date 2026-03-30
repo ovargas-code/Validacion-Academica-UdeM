@@ -34,7 +34,7 @@ class StudentEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var status: StudentStatus = StudentStatus.ACTIVE,
+    var status: StudentStatus = StudentStatus.ACTIVO,
 
     var degreeTitle: String? = null,
 

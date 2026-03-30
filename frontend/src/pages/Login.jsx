@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../api/api';
+import { login, extractErrorMessage } from '../api/api';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function Login() {
       } else if (err.message === 'Token inválido') {
         setError('Respuesta inesperada del servidor.');
       } else {
-        setError('No se pudo conectar al servidor. Verifique que esté activo.');
+        setError(extractErrorMessage(err, 'No se pudo conectar al servidor. Verifique que esté activo.'));
       }
     } finally {
       setLoading(false);

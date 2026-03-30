@@ -36,7 +36,7 @@ import javax.crypto.spec.SecretKeySpec
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@EnableConfigurationProperties(JwtProperties::class)
+@EnableConfigurationProperties(JwtProperties::class, RateLimitProperties::class)
 open class SecurityConfig(
     private val jwtProperties: JwtProperties,
     private val securityProperties: SecurityProperties,
@@ -154,6 +154,7 @@ open class SecurityConfig(
                     "/swagger-ui.html",
                     "/actuator/health",
                     "/actuator/info",
+                    "/actuator/prometheus", // Prometheus scrapes sin JWT; restringir por IP en producción
                     "/",
                     "/verificar"
                 ).permitAll()
@@ -164,9 +165,12 @@ open class SecurityConfig(
                 // Verificación de certificados — pública
                 auth.requestMatchers("/api/v1/verificaciones/**").permitAll()
 
-                // Gestión de estudiantes — solo ADMIN con JWT
+                // Gestión de estudiantes y auditoría — solo ADMIN con JWT
                 auth.requestMatchers(HttpMethod.POST, "/api/v1/students/**").hasAuthority("ROLE_ADMIN")
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/students/**").hasAuthority("ROLE_ADMIN")
+                auth.requestMatchers(HttpMethod.PUT, "/api/v1/students/**").hasAuthority("ROLE_ADMIN")
+                auth.requestMatchers(HttpMethod.DELETE, "/api/v1/students/**").hasAuthority("ROLE_ADMIN")
+                auth.requestMatchers("/api/v1/admin/**").hasAuthority("ROLE_ADMIN")
 
                 auth.anyRequest().authenticated()
             }

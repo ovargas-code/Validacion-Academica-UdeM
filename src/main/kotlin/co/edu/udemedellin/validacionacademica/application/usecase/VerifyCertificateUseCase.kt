@@ -31,8 +31,8 @@ class VerifyCertificateUseCase(
             ?: "No registrada"
 
         val valid = when (validation.validationType) {
-            ValidationType.DEGREE -> student.status == StudentStatus.GRADUATED
-            ValidationType.ENROLLMENT -> student.status == StudentStatus.ACTIVE
+            ValidationType.DEGREE -> student.status == StudentStatus.GRADUADO
+            ValidationType.ENROLLMENT -> student.status == StudentStatus.ACTIVO
         }
 
         return CertificateInfo(

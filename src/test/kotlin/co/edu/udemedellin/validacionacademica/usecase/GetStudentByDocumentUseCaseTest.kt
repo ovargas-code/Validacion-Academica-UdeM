@@ -23,7 +23,7 @@ class GetStudentByDocumentUseCaseTest {
             fullName = "Ana Gómez",
             program = "Medicina",
             academicLevel = AcademicLevel.PREGRADO,
-            status = StudentStatus.ACTIVE
+            status = StudentStatus.ACTIVO
         )
         every { studentRepositoryPort.findByDocument("10350001") } returns estudiante
 

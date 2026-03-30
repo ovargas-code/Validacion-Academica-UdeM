@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { verificarCertificado, descargarCertificadoPDF } from '../api/api';
+import { verificarCertificado, descargarCertificadoPDF, extractErrorMessage } from '../api/api';
 
 export default function Verificar() {
   const [code, setCode] = useState('');
@@ -20,7 +20,7 @@ export default function Verificar() {
       setError(
         err.response?.status === 404
           ? 'No se encontró ningún certificado con ese código.'
-          : err.response?.data?.message || 'Error al verificar. Intenta de nuevo.'
+          : extractErrorMessage(err, 'Error al verificar. Intenta de nuevo.')
       );
     } finally {
       setLoading(false);

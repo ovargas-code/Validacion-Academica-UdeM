@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listarEstudiantes, buscarEstudiantePorDocumento } from '../api/api';
+import { listarEstudiantes, buscarEstudiantePorDocumento, extractErrorMessage } from '../api/api';
+
+const PAGE_SIZE = 20;
 
 export default function Historial() {
   const navigate = useNavigate();
-  const [estudiantes, setEstudiantes] = useState([]);
+
+  const [page, setPage] = useState(0);
+  const [pageData, setPageData] = useState(null); // { content, totalElements, totalPages, currentPage, pageSize }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [search, setSearch] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
@@ -17,23 +22,22 @@ export default function Historial() {
     navigate('/login');
   };
 
-  useEffect(() => {
-    if (!localStorage.getItem('token')) {
-      navigate('/login');
-      return;
-    }
-    listarEstudiantes()
-      .then((res) => setEstudiantes(res.data))
+  const loadPage = useCallback((pageNum) => {
+    setLoading(true);
+    setError(null);
+    listarEstudiantes(pageNum, PAGE_SIZE)
+      .then((res) => { setPageData(res.data); setPage(pageNum); })
       .catch((err) => {
-        if (err.response?.status === 401 || err.response?.status === 403) {
-          localStorage.removeItem('token');
-          navigate('/login');
-          return;
-        } else {
-          setError('No se pudo cargar el historial. Verifique que el servidor esté activo.');
+        if (!err.response || err.response.status !== 401) {
+          setError(extractErrorMessage(err, 'No se pudo cargar el historial. Verifique que el servidor esté activo.'));
         }
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem('token')) { navigate('/login'); return; }
+    loadPage(0);
   }, []);
 
   const handleSearch = async (e) => {
@@ -46,24 +50,23 @@ export default function Historial() {
       const res = await buscarEstudiantePorDocumento(search.trim());
       setSearchResult(res.data);
     } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        localStorage.removeItem('token');
-        navigate('/login');
-      } else if (err.response?.status === 404) {
+      if (err.response?.status === 404) {
         setSearchError('No se encontró estudiante con ese documento.');
-      } else {
-        setSearchError('Error al buscar. Verifique que el servidor esté activo.');
+      } else if (!err.response || err.response.status !== 401) {
+        setSearchError(extractErrorMessage(err, 'Error al buscar. Verifique que el servidor esté activo.'));
       }
     } finally {
       setSearching(false);
     }
   };
 
-  const clearSearch = () => {
-    setSearch('');
-    setSearchResult(null);
-    setSearchError(null);
-  };
+  const clearSearch = () => { setSearch(''); setSearchResult(null); setSearchError(null); };
+
+  const estudiantes = pageData?.content ?? [];
+  const totalPages = pageData?.totalPages ?? 0;
+  const totalElements = pageData?.totalElements ?? 0;
+  const from = totalElements === 0 ? 0 : page * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE + estudiantes.length, totalElements);
 
   return (
     <div className="page fade-in">
@@ -104,14 +107,14 @@ export default function Historial() {
             <div style={{ marginBottom: 12 }}>
               <strong style={{ fontFamily: 'var(--font-display)' }}>Estudiante encontrado</strong>
             </div>
-            {Object.entries(searchResult).map(([key, val]) => (
+            {Object.entries(searchResult).map(([key, val]) =>
               val && (
                 <div className="result-row" key={key}>
                   <span className="result-label">{key}</span>
                   <span className="result-value">{String(val)}</span>
                 </div>
               )
-            ))}
+            )}
           </div>
         )}
       </div>
@@ -122,8 +125,10 @@ export default function Historial() {
           <strong style={{ fontFamily: 'var(--font-display)', fontSize: '1rem' }}>
             Todos los estudiantes
           </strong>
-          {!loading && (
-            <span className="badge badge-pending">{estudiantes.length} registros</span>
+          {!loading && pageData && (
+            <span className="badge badge-pending">
+              {totalElements > 0 ? `${from}–${to} de ${totalElements}` : '0 registros'}
+            </span>
           )}
         </div>
 
@@ -144,37 +149,83 @@ export default function Historial() {
         )}
 
         {!loading && estudiantes.length > 0 && (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Documento</th>
-                  <th>Correo</th>
-                  <th>Programa</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {estudiantes.map((e, i) => (
-                  <tr key={e.id || i}>
-                    <td>{e.fullName || e.name || '—'}</td>
-                    <td style={{ fontFamily: 'monospace', fontSize: 13 }}>{e.documentNumber || e.document || '—'}</td>
-                    <td>{e.email || '—'}</td>
-                    <td>{e.program || e.career || '—'}</td>
-                    <td>
-                      <span className={`badge ${
-                        e.status === 'ACTIVE' ? 'badge-valid' :
-                        e.status === 'INACTIVE' ? 'badge-invalid' : 'badge-pending'
-                      }`}>
-                        {e.status || 'N/A'}
-                      </span>
-                    </td>
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Programa</th>
+                    <th>Nivel</th>
+                    <th>Estado</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {estudiantes.map((e, i) => (
+                    <tr key={e.id || i}>
+                      <td>{e.fullName || '—'}</td>
+                      <td style={{ fontFamily: 'monospace', fontSize: 13 }}>{e.document || '—'}</td>
+                      <td>{e.program || '—'}</td>
+                      <td>{e.academicLevel || '—'}</td>
+                      <td>
+                        <span className={`badge ${
+                          e.status === 'ACTIVO' ? 'badge-valid' :
+                          e.status === 'GRADUADO' ? 'badge-pending' :
+                          'badge-invalid'
+                        }`}>
+                          {e.status || 'N/A'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* PAGINACIÓN */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 20 }}>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => loadPage(0)}
+                  disabled={page === 0}
+                  style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+                >
+                  «
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => loadPage(page - 1)}
+                  disabled={page === 0}
+                  style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+                >
+                  ‹ Anterior
+                </button>
+
+                <span style={{ fontSize: '0.9rem', color: '#555', padding: '0 8px' }}>
+                  Página <strong>{page + 1}</strong> de <strong>{totalPages}</strong>
+                </span>
+
+                <button
+                  className="btn btn-outline"
+                  onClick={() => loadPage(page + 1)}
+                  disabled={page >= totalPages - 1}
+                  style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+                >
+                  Siguiente ›
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => loadPage(totalPages - 1)}
+                  disabled={page >= totalPages - 1}
+                  style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+                >
+                  »
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

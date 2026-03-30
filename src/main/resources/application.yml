@@ -70,6 +70,23 @@ spring:
       mode: always
 
 app:
+  rate-limit:
+    cache:
+      expire-after-access-minutes: 10
+      maximum-size: 100000
+    rules:
+      - prefix: /api/auth/login
+        capacity: 5
+        refill-minutes: 1
+      - prefix: /api/validations/confirm
+        capacity: 5
+        refill-minutes: 1
+      - prefix: /api/validations/
+        capacity: 10
+        refill-minutes: 1
+      - prefix: /api/v1/verificaciones/
+        capacity: 30
+        refill-minutes: 1
   security:
     jwt:
       secret: ${JWT_SECRET:changeme-replace-in-production-min32chars!}
@@ -90,10 +107,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
       show-details: never
+    prometheus:
+      enabled: true
   health:
     mail:
       enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}

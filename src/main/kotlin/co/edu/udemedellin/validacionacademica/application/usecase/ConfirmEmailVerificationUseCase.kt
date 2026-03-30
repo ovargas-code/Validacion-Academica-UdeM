@@ -1,6 +1,8 @@
 package co.edu.udemedellin.validacionacademica.application.usecase
 
 import co.edu.udemedellin.validacionacademica.domain.ports.*
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -11,23 +13,29 @@ class ConfirmEmailVerificationUseCase(
     private val studentRepositoryPort: StudentRepositoryPort,
     private val validationRepositoryPort: ValidationRepositoryPort,
     private val pdfGeneratorPort: PdfGeneratorPort,
-    private val mailPort: MailPort
+    private val mailPort: MailPort,
+    private val meterRegistry: MeterRegistry
 ) {
     private val log = LoggerFactory.getLogger(ConfirmEmailVerificationUseCase::class.java)
 
+    private val certificateTimer = Timer.builder("certificates.generation.duration")
+        .description("Tiempo de generación del certificado PDF")
+        .publishPercentiles(0.5, 0.95, 0.99)
+
     fun execute(token: String, code: String): ConfirmResult {
         val verification = emailVerificationRepositoryPort.findByToken(token)
-            ?: return ConfirmResult.Error("TOKEN_NOT_FOUND", "El token de verificación no es válido.")
+            ?: return otpFailure("TOKEN_NOT_FOUND", "El token de verificación no es válido.")
 
         if (verification.used)
-            return ConfirmResult.Error("TOKEN_ALREADY_USED", "Este código ya fue utilizado. Inicia una nueva solicitud.")
+            return otpFailure("TOKEN_ALREADY_USED", "Este código ya fue utilizado. Inicia una nueva solicitud.")
 
         if (LocalDateTime.now().isAfter(verification.expiresAt))
-            return ConfirmResult.Error("TOKEN_EXPIRED", "El código de verificación ha expirado. Inicia una nueva solicitud.")
+            return otpFailure("TOKEN_EXPIRED", "El código de verificación ha expirado. Inicia una nueva solicitud.")
 
         if (verification.code != code)
-            return ConfirmResult.Error("INVALID_CODE", "El código ingresado es incorrecto.")
+            return otpFailure("INVALID_CODE", "El código ingresado es incorrecto.")
 
+        meterRegistry.counter("otp.verifications", "result", "success").increment()
         emailVerificationRepositoryPort.markAsUsed(verification.id!!)
 
         val student = studentRepositoryPort.findByDocument(verification.studentDocument)
@@ -37,16 +45,21 @@ class ConfirmEmailVerificationUseCase(
             ?: return ConfirmResult.Error("VALIDATION_NOT_FOUND", "No se encontró la solicitud de validación.")
 
         val pdfBytes = try {
-            pdfGeneratorPort.generateCertificate(
-                studentName = student.fullName,
-                studentDocument = student.document,
-                program = student.program,
-                verificationCode = validationRequest.verificationCode
-            )
+            certificateTimer.register(meterRegistry).recordCallable {
+                pdfGeneratorPort.generateCertificate(
+                    studentName = student.fullName,
+                    studentDocument = student.document,
+                    program = student.program,
+                    verificationCode = validationRequest.verificationCode
+                )
+            }!!
         } catch (e: Exception) {
             log.error("Error generando PDF para {}", validationRequest.verificationCode, e)
+            meterRegistry.counter("certificates.issued", "result", "error").increment()
             return ConfirmResult.Error("PDF_ERROR", "Error generando el certificado PDF.")
         }
+
+        meterRegistry.counter("certificates.issued", "result", "success").increment()
 
         try {
             mailPort.enviarCertificado(
@@ -66,6 +79,11 @@ class ConfirmEmailVerificationUseCase(
             email = verification.email,
             verificationCode = validationRequest.verificationCode
         )
+    }
+
+    private fun otpFailure(code: String, message: String): ConfirmResult.Error {
+        meterRegistry.counter("otp.verifications", "result", "failure", "reason", code).increment()
+        return ConfirmResult.Error(code, message)
     }
 }
 

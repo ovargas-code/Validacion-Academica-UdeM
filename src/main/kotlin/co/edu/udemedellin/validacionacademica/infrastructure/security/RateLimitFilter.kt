@@ -1,5 +1,6 @@
 package co.edu.udemedellin.validacionacademica.infrastructure.security
 
+import co.edu.udemedellin.validacionacademica.infrastructure.config.RateLimitProperties
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
@@ -12,40 +13,27 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 /**
  * Rate limiting por IP para endpoints sensibles.
- *
- * Límites configurados:
- *  - /api/auth/login          → 5 req/min  (protección brute-force)
- *  - /api/validations/        → 10 req/min (endpoint público de validación)
- *  - /api/v1/verificaciones/  → 30 req/min (verificación de certificados)
+ * Los límites se configuran en application.yml bajo app.rate-limit.rules.
  *
  * Usa Caffeine como caché con expiración automática para evitar memory leaks
  * ante volumen alto de IPs únicas.
  */
 @Component
 @Order(1)
-class RateLimitFilter : OncePerRequestFilter() {
+class RateLimitFilter(private val rateLimitProperties: RateLimitProperties) : OncePerRequestFilter() {
 
     private val log = LoggerFactory.getLogger(RateLimitFilter::class.java)
 
-    private data class LimitConfig(val capacity: Long, val refillDuration: Duration)
-
-    private val limits = listOf(
-        "/api/auth/login"           to LimitConfig(5,  Duration.ofMinutes(1)),
-        "/api/validations/confirm"  to LimitConfig(5,  Duration.ofMinutes(1)),
-        "/api/validations/"         to LimitConfig(10, Duration.ofMinutes(1)),
-        "/api/v1/verificaciones/"   to LimitConfig(30, Duration.ofMinutes(1))
-    )
-
-    // Cache con evición automática: previene memory leak por IPs únicas
-    private val buckets = Caffeine.newBuilder()
-        .expireAfterAccess(10, TimeUnit.MINUTES)
-        .maximumSize(100_000)
-        .build<String, Bucket>()
+    private val buckets by lazy {
+        Caffeine.newBuilder()
+            .expireAfterAccess(rateLimitProperties.cache.expireAfterAccessMinutes, TimeUnit.MINUTES)
+            .maximumSize(rateLimitProperties.cache.maximumSize)
+            .build<String, Bucket>()
+    }
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -53,16 +41,15 @@ class RateLimitFilter : OncePerRequestFilter() {
         filterChain: FilterChain
     ) {
         val uri = request.requestURI
-        val matched = limits.firstOrNull { (prefix, _) -> uri.startsWith(prefix) }
+        val matched = rateLimitProperties.rules.firstOrNull { rule -> uri.startsWith(rule.prefix) }
 
         if (matched == null) {
             filterChain.doFilter(request, response)
             return
         }
 
-        val (prefix, config) = matched
         val clientIp = resolveClientIp(request)
-        val bucket = buckets.get("$prefix|$clientIp") { createBucket(config) }!!
+        val bucket = buckets.get("${matched.prefix}|$clientIp") { createBucket(matched) }!!
 
         val probe = bucket.tryConsumeAndReturnRemaining(1)
 
@@ -81,11 +68,11 @@ class RateLimitFilter : OncePerRequestFilter() {
         }
     }
 
-    private fun createBucket(config: LimitConfig): Bucket = Bucket.builder()
+    private fun createBucket(rule: RateLimitProperties.RuleConfig): Bucket = Bucket.builder()
         .addLimit(
             Bandwidth.builder()
-                .capacity(config.capacity)
-                .refillGreedy(config.capacity, config.refillDuration)
+                .capacity(rule.capacity)
+                .refillGreedy(rule.capacity, rule.refillDuration())
                 .build()
         )
         .build()

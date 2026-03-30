@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { iniciarValidacion, confirmarVerificacion } from '../api/api';
+import { iniciarValidacion, confirmarVerificacion, extractErrorMessage } from '../api/api';
 
 const VALIDATION_TYPES = ['DEGREE', 'ENROLLMENT'];
 
@@ -48,7 +48,7 @@ export default function Validar() {
         setNonValidResult(data);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al procesar la solicitud. Verifica que el backend esté activo.');
+      setError(extractErrorMessage(err, 'Error al procesar la solicitud. Verifica que el backend esté activo.'));
     } finally {
       setLoading(false);
     }
@@ -87,7 +87,7 @@ export default function Validar() {
           setError('Error al verificar el código.');
         }
       } else {
-        setError(err.response?.data?.message || 'Error al verificar el código.');
+        setError(extractErrorMessage(err, 'Error al verificar el código.'));
       }
     } finally {
       setLoading(false);
