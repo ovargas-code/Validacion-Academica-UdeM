@@ -120,4 +120,63 @@ class StudentControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/students"))
             .andExpect(status().isUnauthorized)
     }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `PUT estudiante existente devuelve 200 con datos actualizados`() {
+        val updateJson = """
+            {
+              "document": "10350001",
+              "fullName": "Ana Gomez Actualizada",
+              "program": "Medicina",
+              "academicLevel": "PREGRADO",
+              "status": "GRADUADO",
+              "degreeTitle": "Médica",
+              "graduationDate": "2025-12-01"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            put("/api/v1/students/10350001")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updateJson)
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.fullName").value("Ana Gomez Actualizada"))
+            .andExpect(jsonPath("$.status").value("GRADUADO"))
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `PUT estudiante inexistente devuelve 404`() {
+        val updateJson = """
+            {
+              "document": "99999999",
+              "fullName": "Nadie",
+              "program": "Ninguno",
+              "academicLevel": "PREGRADO",
+              "status": "ACTIVO"
+            }
+        """.trimIndent()
+
+        mockMvc.perform(
+            put("/api/v1/students/99999999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updateJson)
+        ).andExpect(status().isNotFound)
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `DELETE estudiante existente devuelve 204`() {
+        mockMvc.perform(delete("/api/v1/students/10350002"))
+            .andExpect(status().isNoContent)
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `DELETE estudiante inexistente devuelve 404`() {
+        mockMvc.perform(delete("/api/v1/students/99999999"))
+            .andExpect(status().isNotFound)
+    }
 }

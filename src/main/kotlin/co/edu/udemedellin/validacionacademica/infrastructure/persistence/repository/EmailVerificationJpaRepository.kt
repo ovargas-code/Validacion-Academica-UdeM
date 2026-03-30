@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional
 interface EmailVerificationJpaRepository : JpaRepository<EmailVerificationEntity, Long> {
     fun findByToken(token: String): EmailVerificationEntity?
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("UPDATE EmailVerificationEntity e SET e.used = true WHERE e.id = :id")
     fun markAsUsed(id: Long)
