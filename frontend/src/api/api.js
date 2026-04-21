@@ -100,3 +100,26 @@ export const iniciarValidacion = (data) =>
 
 export const confirmarVerificacion = (token, code) =>
   api.post('/api/validations/confirm', { token, code }, { responseType: 'blob' });
+
+// Solicitudes de empresa (públicas — rate limited)
+
+/**
+ * Envía el formulario de solicitud de verificación académica por empresa.
+ * El argumento debe ser un FormData con dos partes:
+ *   - "datos": Blob JSON con los campos de la solicitud
+ *   - "carta": File PDF de la carta de autorización
+ *
+ * Se pasa Content-Type undefined para que axios no sobreescriba el
+ * multipart/form-data con boundary que el navegador construye automáticamente.
+ */
+export const crearSolicitudEmpresa = (formData) =>
+  api.post('/api/v1/solicitudes-empresa', formData, {
+    headers: { 'Content-Type': undefined },
+  });
+
+export const consultarSolicitud = (numero) =>
+  api.get(`/api/v1/solicitudes-empresa/${numero}`);
+
+/** URL directa para descarga de la plantilla .docx (enlace <a>, no llamada axios). */
+export const urlPlantillaCarta = () =>
+  `${BASE_URL}/api/v1/solicitudes-empresa/recursos/plantilla-carta`;

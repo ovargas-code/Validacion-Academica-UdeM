@@ -34,6 +34,9 @@ export default function Navbar() {
           <NavLink to="/validar" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Solicitar
           </NavLink>
+          <NavLink to="/solicitar-empresa" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Empresas
+          </NavLink>
           <NavLink to="/verificar" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Verificar
           </NavLink>
