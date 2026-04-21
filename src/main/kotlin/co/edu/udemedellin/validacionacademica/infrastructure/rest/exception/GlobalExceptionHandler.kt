@@ -10,6 +10,7 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 import java.time.LocalDateTime
 
 data class ApiError(
@@ -107,6 +108,16 @@ class GlobalExceptionHandler {
             details = details
         )
         return ResponseEntity.badRequest().body(apiError)
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    fun handleMaxUploadSize(ex: MaxUploadSizeExceededException): ResponseEntity<ApiError> {
+        val apiError = ApiError(
+            status = HttpStatus.PAYLOAD_TOO_LARGE.value(),
+            error = "Archivo demasiado grande",
+            message = "El archivo supera el tamaño máximo permitido (10 MB por archivo, 15 MB por solicitud)"
+        )
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(apiError)
     }
 
     @ExceptionHandler(Exception::class)

@@ -83,3 +83,4 @@ Thumbs.db
 coverage/
 .vscode/
 .claude/
+target/

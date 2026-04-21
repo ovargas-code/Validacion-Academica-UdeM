@@ -15,6 +15,10 @@ spring:
     host: ""
 
 app:
+  # Rate limiting desactivado en tests — evita HTTP 429 cuando los tests
+  # ejecutan múltiples peticiones seguidas desde la misma IP (127.0.0.1).
+  rate-limit:
+    rules: []
   security:
     jwt:
       secret: test-secret-for-unit-tests-min-32-chars!!

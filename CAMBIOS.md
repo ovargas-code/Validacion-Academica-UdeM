@@ -1,5 +1,92 @@
 # Registro de Cambios — validacion-academica-ms
 
+---
+
+## [feature/formulario-solicitud-completo] — 21 de abril de 2026
+
+### Nuevo flujo: Solicitud de Verificación Académica por Empresas
+
+Implementación completa del formulario de solicitud para empresas o entidades externas que
+requieren verificar el estado académico de un estudiante o egresado de la Universidad de Medellín.
+Flujo independiente del flujo OTP existente (`initiate → confirm`). No se modificó ninguna
+pieza del flujo anterior.
+
+#### Archivos nuevos — Backend (12 en dominio/aplicación, 8 en infraestructura)
+
+| Capa | Archivo | Descripción |
+|---|---|---|
+| Dominio | `domain/model/SolicitudEmpresa.kt` | Modelo de dominio puro |
+| Dominio | `domain/model/EstadoSolicitud.kt` | Enum: PENDIENTE / EN_REVISION / APROBADA / RECHAZADA |
+| Dominio | `domain/model/TipoDocumento.kt` | Enum: CC / CE / PAS / TI |
+| Dominio | `domain/ports/SolicitudEmpresaRepositoryPort.kt` | Puerto de persistencia |
+| Dominio | `domain/ports/FileStoragePort.kt` | Puerto de almacenamiento de archivos |
+| Aplicación | `usecase/CrearSolicitudEmpresaUseCase.kt` | Orquesta almacenamiento + número + persistencia |
+| Aplicación | `usecase/ConsultarSolicitudEmpresaUseCase.kt` | Consulta por número de radicado |
+| Aplicación | `usecase/GenerarNumeroSolicitudService.kt` | Genera SOL-YYYYMMDD-NNNNNN con consecutivo diario |
+| Infraestructura | `persistence/entity/SolicitudEmpresaEntity.kt` | Tabla `solicitudes_empresa` |
+| Infraestructura | `persistence/repository/SolicitudEmpresaJpaRepository.kt` | Spring Data JPA + query por fecha |
+| Infraestructura | `persistence/adapter/SolicitudEmpresaPersistenceAdapter.kt` | Implementa el puerto |
+| Infraestructura | `storage/LocalFileSystemStorageAdapter.kt` | Escribe en disco con path-traversal guard |
+| Infraestructura | `config/StorageProperties.kt` | `@ConfigurationProperties("app.storage")` |
+| Infraestructura | `config/StorageConfig.kt` | Registra StorageProperties en el contexto |
+| Infraestructura | `rest/dto/CrearSolicitudEmpresaRequest.kt` | DTO multipart con Bean Validation |
+| Infraestructura | `rest/dto/SolicitudEmpresaResponse.kt` | DTO de respuesta (omite rutaCarta) |
+| Infraestructura | `rest/controller/SolicitudEmpresaController.kt` | 3 endpoints públicos |
+
+#### Archivos modificados — Backend
+
+| Archivo | Cambio |
+|---|---|
+| `application.yml` | `app.storage.upload-dir`, multipart 10MB/15MB, rate-limit rule para solicitudes-empresa |
+| `application-test.yml` | `app.rate-limit.rules: []` — desactiva rate limiting en tests para evitar HTTP 429 |
+| `GlobalExceptionHandler.kt` | Handler `MaxUploadSizeExceededException` → HTTP 413 |
+| `SecurityConfig.kt` | `/api/v1/solicitudes-empresa/**` agregado como ruta pública |
+
+#### Endpoints nuevos
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `POST` | `/api/v1/solicitudes-empresa` | Público | Multipart: `datos` (JSON) + `carta` (PDF ≤ 10 MB). Retorna `SOL-YYYYMMDD-NNNNNN`. |
+| `GET` | `/api/v1/solicitudes-empresa/{numeroSolicitud}` | Público | Consulta por número de radicado |
+| `GET` | `/api/v1/solicitudes-empresa/recursos/plantilla-carta` | Público | Descarga plantilla `.docx` |
+
+#### Archivos nuevos — Frontend
+
+| Archivo | Descripción |
+|---|---|
+| `pages/SolicitudEmpresa.jsx` | Formulario en 3 secciones, validación cliente, upload PDF, checkbox consentimiento, panel de éxito |
+| `pages/SolicitudEmpresa.css` | Estilos propios (hereda design system de `index.css`) |
+
+#### Archivos modificados — Frontend
+
+| Archivo | Cambio |
+|---|---|
+| `vite.config.js` | `server.port: 3000, strictPort: true` fusionado con proxy existente |
+| `App.jsx` | Ruta `/solicitar-empresa` |
+| `Navbar.jsx` | Link "Empresas" entre "Solicitar" y "Verificar" |
+| `api.js` | `crearSolicitudEmpresa`, `consultarSolicitud`, `urlPlantillaCarta` |
+
+#### Tests nuevos — 12 tests (todos en verde, total suite: 67 tests)
+
+| Archivo | Tests |
+|---|---|
+| `usecase/CrearSolicitudEmpresaUseCaseTest.kt` | Creación exitosa, `aceptaTerminos=false` rechazado, fallo de storage propagado |
+| `usecase/ConsultarSolicitudEmpresaUseCaseTest.kt` | Número existente retorna solicitud, número inexistente retorna null |
+| `controller/SolicitudEmpresaControllerIntegrationTest.kt` | POST válido 201, consecutivos únicos, aceptaTerminos false 400, NIT inválido 400, correo inválido 400, carta no-PDF 400, GET existente 200, GET inexistente 404, número inválido 400, plantilla 200 |
+
+#### Deuda técnica documentada
+
+> **Flyway pendiente.** El esquema de la nueva tabla `solicitudes_empresa` (y todas las demás)
+> es gestionado por Hibernate con `ddl-auto`. La migración a Flyway está pendiente para el
+> próximo ciclo de hardening. En producción con PostgreSQL, cambios de esquema requieren
+> recrear la BD o aplicarlos manualmente hasta que Flyway esté configurado.
+
+> **Atomicidad disco/BD.** Si la transacción de BD falla después de que el PDF fue escrito
+> en disco, el archivo quedará huérfano en `uploads/`. Pendiente: implementar limpieza
+> periódica o migrar a almacenamiento transaccional (MinIO + outbox pattern).
+
+---
+
 **Fecha:** 24 de marzo de 2026
 **Rama:** `main`
 **Commits incluidos:** `bd54362` → `b183ab3`
