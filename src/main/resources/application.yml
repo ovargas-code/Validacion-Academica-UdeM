@@ -65,6 +65,9 @@ spring:
             enable: ${MAIL_SSL_ENABLE:true}
             trust: smtp.gmail.com
 
+  flyway:
+    enabled: false  # Flyway solo activo en perfil postgres; en H2 usa create-drop + data.sql
+
   sql:
     init:
       mode: always
