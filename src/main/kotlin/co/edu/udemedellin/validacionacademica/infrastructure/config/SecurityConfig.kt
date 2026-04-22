@@ -168,6 +168,9 @@ open class SecurityConfig(
                 // Verificación de certificados — pública
                 auth.requestMatchers("/api/v1/verificaciones/**").permitAll()
 
+                // Solicitudes de empresa — públicas (protegidas por RateLimitFilter)
+                auth.requestMatchers("/api/v1/solicitudes-empresa/**").permitAll()
+
                 // Gestión de estudiantes y auditoría — solo ADMIN con JWT
                 auth.requestMatchers(HttpMethod.POST, "/api/v1/students/**").hasAuthority("ROLE_ADMIN")
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/students/**").hasAuthority("ROLE_ADMIN")

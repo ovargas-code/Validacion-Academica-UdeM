@@ -5,6 +5,7 @@ import Validar from './pages/Validar';
 import Verificar from './pages/Verificar';
 import Historial from './pages/Historial';
 import Login from './pages/Login';
+import SolicitudEmpresa from './pages/SolicitudEmpresa';
 import './index.css';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/validar" element={<Validar />} />
+        <Route path="/solicitar-empresa" element={<SolicitudEmpresa />} />
         <Route path="/verificar" element={<Verificar />} />
         <Route path="/historial" element={<Historial />} />
         <Route path="/login" element={<Login />} />
