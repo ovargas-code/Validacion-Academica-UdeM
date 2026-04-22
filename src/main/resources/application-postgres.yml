@@ -6,12 +6,15 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
-    defer-datasource-initialization: true
+    defer-datasource-initialization: false  # Flyway gestiona el schema; no aplica el init de Spring Boot
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   sql:
     init:
       mode: never
