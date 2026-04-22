@@ -444,7 +444,7 @@ export default function SolicitudEmpresa() {
                   Declaro que la información suministrada es verídica y que la empresa autoriza
                   el tratamiento de datos personales conforme a la{' '}
                   <a
-                    href="https://www.udemedellin.edu.co/politica-privacidad"
+                    href="https://udemedellin.edu.co/politica-para-el-manejo-y-tratamiento-de-datos-personales/"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
