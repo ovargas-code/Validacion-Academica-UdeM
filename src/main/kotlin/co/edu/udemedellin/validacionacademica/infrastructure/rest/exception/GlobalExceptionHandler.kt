@@ -76,11 +76,22 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException::class)
-    fun handleDuplicateKey(ex: Exception): ResponseEntity<ApiError> {
+    fun handleDuplicateKey(ex: org.springframework.dao.DataIntegrityViolationException): ResponseEntity<ApiError> {
+        val message = when (val cause = ex.cause) {
+            is org.hibernate.exception.ConstraintViolationException -> when (cause.constraintName) {
+                "idx_solicitud_numero" ->
+                    "No se pudo completar el registro por un conflicto interno. Por favor reintente la operación."
+                "idx_students_document" ->
+                    "Ya existe un estudiante con ese documento."
+                else ->
+                    "Conflicto de datos al guardar el registro."
+            }
+            else -> "Conflicto de datos al guardar el registro."
+        }
         val apiError = ApiError(
             status = HttpStatus.CONFLICT.value(),
             error = "Conflicto de datos",
-            message = "Ya existe un registro con ese documento"
+            message = message
         )
         return ResponseEntity.status(HttpStatus.CONFLICT).body(apiError)
     }

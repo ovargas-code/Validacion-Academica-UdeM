@@ -18,10 +18,10 @@ class SolicitudEmpresaPersistenceAdapter(
     override fun findByNumeroSolicitud(numero: String): SolicitudEmpresa? =
         jpaRepository.findByNumeroSolicitud(numero)?.toDomain()
 
-    override fun countByFecha(fecha: LocalDate): Long {
+    override fun findMaxNumeroSolicitudByFecha(fecha: LocalDate): String? {
         val startOfDay = fecha.atStartOfDay()
         val endOfDay = fecha.plusDays(1).atStartOfDay()
-        return jpaRepository.countByFecha(startOfDay, endOfDay)
+        return jpaRepository.findMaxNumeroSolicitudByFecha(startOfDay, endOfDay)
     }
 
     // ── Mapeos ────────────────────────────────────────────────────────────────

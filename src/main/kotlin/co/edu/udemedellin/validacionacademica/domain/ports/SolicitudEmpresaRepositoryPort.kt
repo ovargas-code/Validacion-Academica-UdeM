@@ -24,8 +24,10 @@ interface SolicitudEmpresaRepositoryPort {
     fun findByNumeroSolicitud(numero: String): SolicitudEmpresa?
 
     /**
-     * Cuenta cuántas solicitudes fueron creadas en la fecha calendario indicada.
-     * Usado por el generador de número de solicitud para calcular el consecutivo diario.
+     * Retorna el número de solicitud más alto (`SOL-YYYYMMDD-NNNNNN`) creado en la fecha
+     * calendario indicada, o `null` si no existe ningún registro para ese día.
+     * Usado por el generador de número de solicitud para calcular el consecutivo diario
+     * de forma segura ante borrados (MAX es inmune a gaps, COUNT no lo es).
      */
-    fun countByFecha(fecha: LocalDate): Long
+    fun findMaxNumeroSolicitudByFecha(fecha: LocalDate): String?
 }
