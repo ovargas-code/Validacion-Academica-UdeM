@@ -14,7 +14,8 @@ interface PdfGeneratorPort {
      * @param studentName nombre completo del estudiante que aparecerá en el certificado.
      * @param studentDocument número de documento del estudiante.
      * @param program nombre del programa académico.
-     * @param verificationCode código único que identifica el certificado y se codifica en el QR.
+     * @param verificationUrl URL completa que se codifica en el QR del certificado.
+     *   El puerto no construye la URL; la recibe lista del caller.
      * @return contenido del PDF generado listo para enviar o descargar.
      * @throws Exception si la generación del PDF falla (error de plantilla, recursos faltantes, etc.).
      */
@@ -22,6 +23,6 @@ interface PdfGeneratorPort {
         studentName: String,
         studentDocument: String,
         program: String,
-        verificationCode: String
+        verificationUrl: String
     ): ByteArray
 }

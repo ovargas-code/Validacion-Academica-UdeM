@@ -1,5 +1,6 @@
 package co.edu.udemedellin.validacionacademica.infrastructure.rest.exception
 
+import co.edu.udemedellin.validacionacademica.domain.model.InvalidStateTransitionException
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
@@ -94,6 +95,26 @@ class GlobalExceptionHandler {
             message = message
         )
         return ResponseEntity.status(HttpStatus.CONFLICT).body(apiError)
+    }
+
+    @ExceptionHandler(InvalidStateTransitionException::class)
+    fun handleInvalidStateTransition(ex: InvalidStateTransitionException): ResponseEntity<ApiError> {
+        val apiError = ApiError(
+            status = HttpStatus.CONFLICT.value(),
+            error = "Transición de estado inválida",
+            message = ex.message ?: "La operación no está permitida en el estado actual de la solicitud"
+        )
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(apiError)
+    }
+
+    @ExceptionHandler(NoSuchElementException::class)
+    fun handleNoSuchElement(ex: NoSuchElementException): ResponseEntity<ApiError> {
+        val apiError = ApiError(
+            status = HttpStatus.NOT_FOUND.value(),
+            error = "Recurso no encontrado",
+            message = ex.message ?: "El recurso solicitado no existe"
+        )
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError)
     }
 
     @ExceptionHandler(IllegalArgumentException::class)

@@ -127,4 +127,133 @@ class MailServiceAdapter(
         mailSender.send(mensaje)
         logger.info("Código OTP enviado a {}", emailDestino)
     }
+
+    override fun enviarNotificacionEnRevision(
+        emailDestino: String,
+        nombreContacto: String,
+        numeroSolicitud: String
+    ) {
+        require(emailDestino.isNotBlank()) { "El correo destino no puede estar vacío" }
+
+        if (mailSender == null) {
+            logger.warn("JavaMailSender no disponible. Se omite notificación EN_REVISION para '{}'.", emailDestino)
+            return
+        }
+
+        val normalizedFrom = configuredFrom.trim()
+        if (normalizedFrom.isBlank()) {
+            logger.warn("MAIL_USERNAME no configurado. Se omite notificación EN_REVISION para '{}'.", emailDestino)
+            return
+        }
+
+        val mensaje: MimeMessage = mailSender.createMimeMessage()
+        val helper = MimeMessageHelper(mensaje, false, Charsets.UTF_8.name())
+        helper.setTo(emailDestino)
+        helper.setFrom(normalizedFrom)
+        helper.setReplyTo(normalizedFrom)
+        helper.setSubject("Solicitud $numeroSolicitud — En revisión")
+
+        val cuerpoHtml = """
+            <div style="font-family: Arial, sans-serif; border-top: 5px solid #C8102E; padding: 20px; color: #333;">
+                <h2 style="color: #C8102E;">Cordial saludo, $nombreContacto</h2>
+                <p>Hemos recibido tu solicitud <strong>$numeroSolicitud</strong> y está siendo revisada
+                por el equipo de validación académica.</p>
+                <p>Te notificaremos cuando tengamos una respuesta.</p>
+                <br>
+                <p>Atentamente,</p>
+                <p><b>Universidad de Medellín</b><br>Sistema de Validación Académica</p>
+            </div>
+        """.trimIndent()
+
+        helper.setText(cuerpoHtml, true)
+        mailSender.send(mensaje)
+        logger.info("Notificación EN_REVISION enviada a {}", emailDestino)
+    }
+
+    override fun enviarNotificacionAprobada(
+        emailDestino: String,
+        nombreContacto: String,
+        numeroSolicitud: String,
+        pdfBytes: ByteArray
+    ) {
+        require(emailDestino.isNotBlank()) { "El correo destino no puede estar vacío" }
+        require(pdfBytes.isNotEmpty()) { "El PDF del certificado llegó vacío" }
+
+        if (mailSender == null) {
+            logger.warn("JavaMailSender no disponible. Se omite notificación APROBADA para '{}'.", emailDestino)
+            return
+        }
+
+        val normalizedFrom = configuredFrom.trim()
+        if (normalizedFrom.isBlank()) {
+            logger.warn("MAIL_USERNAME no configurado. Se omite notificación APROBADA para '{}'.", emailDestino)
+            return
+        }
+
+        val mensaje: MimeMessage = mailSender.createMimeMessage()
+        val helper = MimeMessageHelper(mensaje, true, Charsets.UTF_8.name())
+        helper.setTo(emailDestino)
+        helper.setFrom(normalizedFrom)
+        helper.setReplyTo(normalizedFrom)
+        helper.setSubject("Solicitud $numeroSolicitud — Aprobada — Certificado adjunto")
+
+        val cuerpoHtml = """
+            <div style="font-family: Arial, sans-serif; border-top: 5px solid #C8102E; padding: 20px; color: #333;">
+                <h2 style="color: #C8102E;">Cordial saludo, $nombreContacto</h2>
+                <p>Tu solicitud <strong>$numeroSolicitud</strong> fue aprobada.</p>
+                <p>Adjuntamos el certificado académico verificado del estudiante consultado.</p>
+                <br>
+                <p>Atentamente,</p>
+                <p><b>Universidad de Medellín</b><br>Sistema de Validación Académica</p>
+            </div>
+        """.trimIndent()
+
+        helper.setText(cuerpoHtml, true)
+        helper.addAttachment("Certificado_$numeroSolicitud.pdf", org.springframework.core.io.ByteArrayResource(pdfBytes))
+        mailSender.send(mensaje)
+        logger.info("Notificación APROBADA con certificado enviada a {}", emailDestino)
+    }
+
+    override fun enviarNotificacionRechazada(
+        emailDestino: String,
+        nombreContacto: String,
+        numeroSolicitud: String,
+        comentarioAdmin: String
+    ) {
+        require(emailDestino.isNotBlank()) { "El correo destino no puede estar vacío" }
+
+        if (mailSender == null) {
+            logger.warn("JavaMailSender no disponible. Se omite notificación RECHAZADA para '{}'.", emailDestino)
+            return
+        }
+
+        val normalizedFrom = configuredFrom.trim()
+        if (normalizedFrom.isBlank()) {
+            logger.warn("MAIL_USERNAME no configurado. Se omite notificación RECHAZADA para '{}'.", emailDestino)
+            return
+        }
+
+        val mensaje: MimeMessage = mailSender.createMimeMessage()
+        val helper = MimeMessageHelper(mensaje, false, Charsets.UTF_8.name())
+        helper.setTo(emailDestino)
+        helper.setFrom(normalizedFrom)
+        helper.setReplyTo(normalizedFrom)
+        helper.setSubject("Solicitud $numeroSolicitud — Rechazada")
+
+        val cuerpoHtml = """
+            <div style="font-family: Arial, sans-serif; border-top: 5px solid #C8102E; padding: 20px; color: #333;">
+                <h2 style="color: #C8102E;">Cordial saludo, $nombreContacto</h2>
+                <p>Tu solicitud <strong>$numeroSolicitud</strong> fue rechazada.</p>
+                <p><strong>Motivo:</strong> $comentarioAdmin</p>
+                <p>Si tienes alguna duda, comunícate con el equipo de validación académica.</p>
+                <br>
+                <p>Atentamente,</p>
+                <p><b>Universidad de Medellín</b><br>Sistema de Validación Académica</p>
+            </div>
+        """.trimIndent()
+
+        helper.setText(cuerpoHtml, true)
+        mailSender.send(mensaje)
+        logger.info("Notificación RECHAZADA enviada a {}", emailDestino)
+    }
 }

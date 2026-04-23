@@ -22,7 +22,7 @@ class PdfDocumentGeneratorAdapter : PdfGeneratorPort {
         studentName: String,
         studentDocument: String,
         program: String,
-        verificationCode: String
+        verificationUrl: String
     ): ByteArray {
         val out      = ByteArrayOutputStream()
         val document = Document(PageSize.A4, 0f, 0f, 0f, 0f)
@@ -127,9 +127,10 @@ class PdfDocumentGeneratorAdapter : PdfGeneratorPort {
             Phrase("Coordinación De Admisiones Y Registro", fSignerRole), sigCx, 70f, 0f)
 
         // 6. QR
+        val verificationLabel = verificationUrl.substringAfterLast('/')
         try {
             val bits = QRCodeWriter().encode(
-                "https://validador.udem.edu.co/verify/$verificationCode",
+                verificationUrl,
                 BarcodeFormat.QR_CODE, 240, 240
             )
             val qrStream = ByteArrayOutputStream()
@@ -140,7 +141,7 @@ class PdfDocumentGeneratorAdapter : PdfGeneratorPort {
         } catch (e: Exception) { logger.warn("Error generando código QR para el certificado: {}", e.message) }
 
         ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT,
-            Phrase("Verificación: $verificationCode", fVerif), 440f, 72f, 0f)
+            Phrase("Verificación: $verificationLabel", fVerif), 440f, 72f, 0f)
 
         // 7. PIE
         ColumnText.showTextAligned(canvas, Element.ALIGN_CENTER,

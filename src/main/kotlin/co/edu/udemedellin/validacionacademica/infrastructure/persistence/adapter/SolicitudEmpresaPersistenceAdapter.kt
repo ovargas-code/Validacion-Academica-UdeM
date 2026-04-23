@@ -18,6 +18,9 @@ class SolicitudEmpresaPersistenceAdapter(
     override fun findByNumeroSolicitud(numero: String): SolicitudEmpresa? =
         jpaRepository.findByNumeroSolicitud(numero)?.toDomain()
 
+    override fun update(solicitud: SolicitudEmpresa): SolicitudEmpresa =
+        jpaRepository.save(solicitud.toEntity()).toDomain()
+
     override fun findMaxNumeroSolicitudByFecha(fecha: LocalDate): String? {
         val startOfDay = fecha.atStartOfDay()
         val endOfDay = fecha.plusDays(1).atStartOfDay()
@@ -45,7 +48,10 @@ class SolicitudEmpresaPersistenceAdapter(
         rutaCarta = rutaCarta,
         estado = estado,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        comentarioAdmin = comentarioAdmin,
+        fechaRevision = fechaRevision,
+        adminResponsable = adminResponsable
     )
 
     private fun SolicitudEmpresaEntity.toDomain(): SolicitudEmpresa = SolicitudEmpresa(
@@ -67,6 +73,9 @@ class SolicitudEmpresaPersistenceAdapter(
         rutaCarta = rutaCarta,
         estado = estado,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        comentarioAdmin = comentarioAdmin,
+        fechaRevision = fechaRevision,
+        adminResponsable = adminResponsable
     )
 }
