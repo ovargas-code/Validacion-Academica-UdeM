@@ -103,6 +103,9 @@ app:
       - prefix: /api/v1/solicitudes-empresa
         capacity: 10
         refill-minutes: 1
+      - prefix: /api/v1/public/solicitudes-empresa
+        capacity: 20
+        refill-minutes: 1
   security:
     jwt:
       secret: ${JWT_SECRET:changeme-replace-in-production-min32chars!}
