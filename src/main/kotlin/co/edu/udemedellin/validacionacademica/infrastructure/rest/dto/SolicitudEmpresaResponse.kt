@@ -28,7 +28,12 @@ data class SolicitudEmpresaResponse(
     // ── Detalle de la solicitud ───────────────────────────────────────────────
     val tipoValidacion: ValidationType,
     val observaciones: String?,
-    val aceptaTerminos: Boolean
+    val aceptaTerminos: Boolean,
+
+    // ── Revisión administrativa (null mientras esté PENDIENTE) ────────────────
+    val comentarioAdmin: String?,
+    val fechaRevision: LocalDateTime?,
+    val adminResponsable: String?
     // Nota: rutaCarta se omite intencionalmente — es una ruta interna del servidor.
 )
 
@@ -48,5 +53,8 @@ fun SolicitudEmpresa.toResponse() = SolicitudEmpresaResponse(
     programaConsultado = programaConsultado,
     tipoValidacion = tipoValidacion,
     observaciones = observaciones,
-    aceptaTerminos = aceptaTerminos
+    aceptaTerminos = aceptaTerminos,
+    comentarioAdmin = comentarioAdmin,
+    fechaRevision = fechaRevision,
+    adminResponsable = adminResponsable
 )

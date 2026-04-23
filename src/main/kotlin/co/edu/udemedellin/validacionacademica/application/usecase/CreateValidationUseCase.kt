@@ -7,6 +7,7 @@ import co.edu.udemedellin.validacionacademica.domain.ports.PdfGeneratorPort
 import co.edu.udemedellin.validacionacademica.domain.ports.StudentRepositoryPort
 import co.edu.udemedellin.validacionacademica.domain.ports.ValidationRepositoryPort
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -19,7 +20,9 @@ class CreateValidationUseCase(
     private val studentRepositoryPort: StudentRepositoryPort,
     private val documentGeneratorPort: DocumentGeneratorPort,
     private val pdfGeneratorPort: PdfGeneratorPort,
-    private val mailPort: MailPort
+    private val mailPort: MailPort,
+    @Value("\${app.base-url:http://localhost:8080}")
+    private val baseUrl: String = "http://localhost:8080"
 ) {
     private val logger = LoggerFactory.getLogger(CreateValidationUseCase::class.java)
 
@@ -38,12 +41,13 @@ class CreateValidationUseCase(
         var pdfBytes: ByteArray? = null
 
         if (student != null && result.status == ValidationStatus.VALID) {
+            val verificationUrl = "$baseUrl/api/v1/verificaciones/${savedRequest.verificationCode}"
             try {
                 pdfBytes = pdfGeneratorPort.generateCertificate(
                     studentName = student.fullName,
                     studentDocument = student.document,
                     program = student.program,
-                    verificationCode = savedRequest.verificationCode
+                    verificationUrl = verificationUrl
                 )
             } catch (e: Exception) {
                 logger.error("Error generando PDF para el código {}", savedRequest.verificationCode, e)

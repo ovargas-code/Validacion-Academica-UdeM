@@ -30,4 +30,10 @@ interface SolicitudEmpresaRepositoryPort {
      * de forma segura ante borrados (MAX es inmune a gaps, COUNT no lo es).
      */
     fun findMaxNumeroSolicitudByFecha(fecha: LocalDate): String?
+
+    /**
+     * Actualiza una solicitud existente (debe tener [SolicitudEmpresa.id] no nulo).
+     * Usado para cambios de estado administrativos.
+     */
+    fun update(solicitud: SolicitudEmpresa): SolicitudEmpresa
 }

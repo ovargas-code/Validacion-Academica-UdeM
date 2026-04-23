@@ -32,4 +32,43 @@ interface MailPort {
      * @throws Exception si el envío SMTP falla de forma no recuperable.
      */
     fun enviarCodigoVerificacion(emailDestino: String, nombreSolicitante: String, codigo: String, expiresInMinutes: Long)
+
+    /**
+     * Notifica al contacto de la empresa que su solicitud fue puesta en revisión.
+     *
+     * @param emailDestino correo del contacto de la empresa.
+     * @param nombreContacto nombre del contacto, usado en el saludo.
+     * @param numeroSolicitud número de radicado de la solicitud.
+     */
+    fun enviarNotificacionEnRevision(emailDestino: String, nombreContacto: String, numeroSolicitud: String)
+
+    /**
+     * Notifica al contacto de la empresa que su solicitud fue aprobada y adjunta el certificado.
+     *
+     * @param emailDestino correo del contacto de la empresa.
+     * @param nombreContacto nombre del contacto, usado en el saludo.
+     * @param numeroSolicitud número de radicado de la solicitud.
+     * @param pdfBytes bytes del certificado académico generado.
+     */
+    fun enviarNotificacionAprobada(
+        emailDestino: String,
+        nombreContacto: String,
+        numeroSolicitud: String,
+        pdfBytes: ByteArray
+    )
+
+    /**
+     * Notifica al contacto de la empresa que su solicitud fue rechazada, con el motivo.
+     *
+     * @param emailDestino correo del contacto de la empresa.
+     * @param nombreContacto nombre del contacto, usado en el saludo.
+     * @param numeroSolicitud número de radicado de la solicitud.
+     * @param comentarioAdmin motivo del rechazo (obligatorio).
+     */
+    fun enviarNotificacionRechazada(
+        emailDestino: String,
+        nombreContacto: String,
+        numeroSolicitud: String,
+        comentarioAdmin: String
+    )
 }

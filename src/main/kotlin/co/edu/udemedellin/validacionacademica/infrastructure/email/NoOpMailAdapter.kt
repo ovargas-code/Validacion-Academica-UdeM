@@ -30,4 +30,26 @@ class NoOpMailAdapter : MailPort {
             codigo, emailDestino
         )
     }
+
+    override fun enviarNotificacionEnRevision(emailDestino: String, nombreContacto: String, numeroSolicitud: String) {
+        logger.warn("NoOpMailAdapter: se omite notificación EN_REVISION para '{}'.", emailDestino)
+    }
+
+    override fun enviarNotificacionAprobada(
+        emailDestino: String,
+        nombreContacto: String,
+        numeroSolicitud: String,
+        pdfBytes: ByteArray
+    ) {
+        logger.warn("NoOpMailAdapter: se omite notificación APROBADA para '{}'.", emailDestino)
+    }
+
+    override fun enviarNotificacionRechazada(
+        emailDestino: String,
+        nombreContacto: String,
+        numeroSolicitud: String,
+        comentarioAdmin: String
+    ) {
+        logger.warn("NoOpMailAdapter: se omite notificación RECHAZADA para '{}'.", emailDestino)
+    }
 }

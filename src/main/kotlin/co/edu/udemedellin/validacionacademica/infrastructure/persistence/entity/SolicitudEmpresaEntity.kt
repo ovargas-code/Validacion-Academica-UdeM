@@ -94,5 +94,16 @@ class SolicitudEmpresaEntity(
     var createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Column(name = "updated_at")
-    var updatedAt: LocalDateTime? = null
+    var updatedAt: LocalDateTime? = null,
+
+    // ── Revisión administrativa ───────────────────────────────────────────────
+
+    @Column(name = "comentario_admin", length = 1000)
+    var comentarioAdmin: String? = null,
+
+    @Column(name = "fecha_revision")
+    var fechaRevision: LocalDateTime? = null,
+
+    @Column(name = "admin_responsable", length = 100)
+    var adminResponsable: String? = null
 )

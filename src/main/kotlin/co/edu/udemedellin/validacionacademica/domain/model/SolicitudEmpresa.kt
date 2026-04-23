@@ -47,5 +47,14 @@ data class SolicitudEmpresa(
 
     val estado: EstadoSolicitud = EstadoSolicitud.PENDIENTE,
     val createdAt: LocalDateTime = LocalDateTime.now(),
-    val updatedAt: LocalDateTime? = null
+    val updatedAt: LocalDateTime? = null,
+
+    // ── Revisión administrativa ───────────────────────────────────────────────
+
+    /** Comentario del administrador. Obligatorio al rechazar, opcional en los demás estados. */
+    val comentarioAdmin: String? = null,
+    /** Timestamp del último cambio de estado realizado por un administrador. */
+    val fechaRevision: LocalDateTime? = null,
+    /** Username del administrador que realizó el último cambio de estado. */
+    val adminResponsable: String? = null
 )

@@ -4,6 +4,7 @@ import co.edu.udemedellin.validacionacademica.domain.ports.*
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -15,7 +16,9 @@ class ConfirmEmailVerificationUseCase(
     private val validationRepositoryPort: ValidationRepositoryPort,
     private val pdfGeneratorPort: PdfGeneratorPort,
     private val mailPort: MailPort,
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
+    @Value("\${app.base-url:http://localhost:8080}")
+    private val baseUrl: String = "http://localhost:8080"
 ) {
     private val log = LoggerFactory.getLogger(ConfirmEmailVerificationUseCase::class.java)
 
@@ -48,13 +51,14 @@ class ConfirmEmailVerificationUseCase(
         val validationRequest = validationRepositoryPort.findById(verification.validationRequestId)
             ?: return ConfirmResult.Error("VALIDATION_NOT_FOUND", "No se encontró la solicitud de validación.")
 
+        val verificationUrl = "$baseUrl/api/v1/verificaciones/${validationRequest.verificationCode}"
         val pdfBytes = try {
             certificateTimer.register(meterRegistry).recordCallable {
                 pdfGeneratorPort.generateCertificate(
                     studentName = student.fullName,
                     studentDocument = student.document,
                     program = student.program,
-                    verificationCode = validationRequest.verificationCode
+                    verificationUrl = verificationUrl
                 )
             } ?: run {
                 log.error("El generador de PDF retornó null para {}", validationRequest.verificationCode)
