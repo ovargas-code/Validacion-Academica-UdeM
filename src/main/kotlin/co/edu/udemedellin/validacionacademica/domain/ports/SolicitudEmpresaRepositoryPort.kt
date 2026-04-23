@@ -1,6 +1,9 @@
 package co.edu.udemedellin.validacionacademica.domain.ports
 
+import co.edu.udemedellin.validacionacademica.domain.model.EstadoSolicitud
 import co.edu.udemedellin.validacionacademica.domain.model.SolicitudEmpresa
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import java.time.LocalDate
 
 /**
@@ -36,4 +39,12 @@ interface SolicitudEmpresaRepositoryPort {
      * Usado para cambios de estado administrativos.
      */
     fun update(solicitud: SolicitudEmpresa): SolicitudEmpresa
+
+    /**
+     * Retorna una página de solicitudes ordenada por [SolicitudEmpresa.createdAt] DESC.
+     *
+     * @param pageable configuración de paginado y orden.
+     * @param estado   filtro opcional por estado; si es null se devuelven todas.
+     */
+    fun findAll(pageable: Pageable, estado: EstadoSolicitud?): Page<SolicitudEmpresa>
 }

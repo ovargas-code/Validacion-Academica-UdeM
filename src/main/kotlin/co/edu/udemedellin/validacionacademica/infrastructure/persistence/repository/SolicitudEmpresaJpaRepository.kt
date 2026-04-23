@@ -1,6 +1,9 @@
 package co.edu.udemedellin.validacionacademica.infrastructure.persistence.repository
 
+import co.edu.udemedellin.validacionacademica.domain.model.EstadoSolicitud
 import co.edu.udemedellin.validacionacademica.infrastructure.persistence.entity.SolicitudEmpresaEntity
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -9,6 +12,8 @@ import java.time.LocalDateTime
 interface SolicitudEmpresaJpaRepository : JpaRepository<SolicitudEmpresaEntity, Long> {
 
     fun findByNumeroSolicitud(numeroSolicitud: String): SolicitudEmpresaEntity?
+
+    fun findByEstado(estado: EstadoSolicitud, pageable: Pageable): Page<SolicitudEmpresaEntity>
 
     /**
      * Retorna el número de solicitud (`SOL-YYYYMMDD-NNNNNN`) más alto cuyo

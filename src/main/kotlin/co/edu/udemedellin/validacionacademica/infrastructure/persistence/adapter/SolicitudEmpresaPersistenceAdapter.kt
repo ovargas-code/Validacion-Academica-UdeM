@@ -1,9 +1,12 @@
 package co.edu.udemedellin.validacionacademica.infrastructure.persistence.adapter
 
+import co.edu.udemedellin.validacionacademica.domain.model.EstadoSolicitud
 import co.edu.udemedellin.validacionacademica.domain.model.SolicitudEmpresa
 import co.edu.udemedellin.validacionacademica.domain.ports.SolicitudEmpresaRepositoryPort
 import co.edu.udemedellin.validacionacademica.infrastructure.persistence.entity.SolicitudEmpresaEntity
 import co.edu.udemedellin.validacionacademica.infrastructure.persistence.repository.SolicitudEmpresaJpaRepository
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
@@ -20,6 +23,15 @@ class SolicitudEmpresaPersistenceAdapter(
 
     override fun update(solicitud: SolicitudEmpresa): SolicitudEmpresa =
         jpaRepository.save(solicitud.toEntity()).toDomain()
+
+    override fun findAll(pageable: Pageable, estado: EstadoSolicitud?): Page<SolicitudEmpresa> {
+        val page = if (estado != null) {
+            jpaRepository.findByEstado(estado, pageable)
+        } else {
+            jpaRepository.findAll(pageable)
+        }
+        return page.map { it.toDomain() }
+    }
 
     override fun findMaxNumeroSolicitudByFecha(fecha: LocalDate): String? {
         val startOfDay = fecha.atStartOfDay()
