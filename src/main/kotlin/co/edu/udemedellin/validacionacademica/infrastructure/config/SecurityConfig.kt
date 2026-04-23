@@ -155,7 +155,8 @@ open class SecurityConfig(
                     "/actuator/health",
                     "/actuator/info",
                     "/",
-                    "/verificar"
+                    "/verificar",
+                    "/api/v1/public/**"
                 ).permitAll()
 
                 // Métricas Prometheus — requiere JWT de ADMIN
