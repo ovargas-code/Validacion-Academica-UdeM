@@ -123,3 +123,34 @@ export const consultarSolicitud = (numero) =>
 /** URL directa para descarga de la plantilla .docx (enlace <a>, no llamada axios). */
 export const urlPlantillaCarta = () =>
   `${BASE_URL}/api/v1/solicitudes-empresa/recursos/plantilla-carta`;
+
+// Solicitudes empresa — Admin (requieren ROLE_ADMIN + JWT)
+
+export const listarSolicitudesAdmin = (page = 0, size = 20, estado = null) => {
+  const params = { page, size };
+  if (estado) params.estado = estado;
+  return api.get('/api/v1/admin/solicitudes-empresa', { params });
+};
+
+export const descargarCartaSolicitud = (numero) =>
+  api.get(`/api/v1/admin/solicitudes-empresa/${numero}/carta`, {
+    responseType: 'blob',
+  });
+
+export const marcarEnRevision = (numero, comentarioAdmin = null) =>
+  api.post(
+    `/api/v1/admin/solicitudes-empresa/${numero}/marcar-en-revision`,
+    { comentarioAdmin }
+  );
+
+export const aprobarSolicitud = (numero, comentarioAdmin = null) =>
+  api.post(
+    `/api/v1/admin/solicitudes-empresa/${numero}/aprobar`,
+    { comentarioAdmin }
+  );
+
+export const rechazarSolicitud = (numero, comentarioAdmin) =>
+  api.post(
+    `/api/v1/admin/solicitudes-empresa/${numero}/rechazar`,
+    { comentarioAdmin }
+  );

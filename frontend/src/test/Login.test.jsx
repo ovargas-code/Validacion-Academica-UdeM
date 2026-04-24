@@ -45,7 +45,7 @@ describe('Login', () => {
     expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeDisabled();
   });
 
-  it('guarda el token y navega a /historial tras login exitoso', async () => {
+  it('guarda el token y navega a /admin/solicitudes tras login exitoso', async () => {
     login.mockResolvedValueOnce({ data: { token: 'jwt-token-123' } });
     const user = userEvent.setup();
     renderLogin();
@@ -56,7 +56,7 @@ describe('Login', () => {
 
     await waitFor(() => {
       expect(localStorage.getItem('token')).toBe('jwt-token-123');
-      expect(mockNavigate).toHaveBeenCalledWith('/historial');
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/solicitudes');
     });
   });
 

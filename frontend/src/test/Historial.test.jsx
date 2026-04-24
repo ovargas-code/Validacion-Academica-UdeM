@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import Historial from '../pages/Historial';
@@ -30,37 +30,42 @@ const PAGE_1 = {
   pageSize: 20,
 };
 
-function renderHistorial() {
-  return render(
-    <MemoryRouter>
-      <Historial />
-    </MemoryRouter>
-  );
+async function renderHistorial() {
+  await act(async () => {
+    render(
+      <MemoryRouter>
+        <Historial />
+      </MemoryRouter>
+    );
+  });
 }
 
 describe('Historial', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset once-queues — vi.clearAllMocks() clears call records but NOT queued return values
+    listarEstudiantes.mockReset();
+    buscarEstudiantePorDocumento.mockReset();
     localStorage.clear();
   });
 
-  it('redirige a /login si no hay token en localStorage', () => {
-    listarEstudiantes.mockResolvedValueOnce({ data: PAGE_1 });
-    renderHistorial();
+  it('redirige a /login si no hay token en localStorage', async () => {
+    // No token → loadPage is never called, no API mock needed
+    await renderHistorial();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 
   it('muestra spinner mientras carga', () => {
     localStorage.setItem('token', 'tok');
     listarEstudiantes.mockReturnValueOnce(new Promise(() => {})); // nunca resuelve
-    renderHistorial();
+    render(<MemoryRouter><Historial /></MemoryRouter>);
     expect(screen.getByText(/cargando/i)).toBeInTheDocument();
   });
 
   it('renderiza la tabla con los estudiantes tras carga exitosa', async () => {
     localStorage.setItem('token', 'tok');
     listarEstudiantes.mockResolvedValueOnce({ data: PAGE_1 });
-    renderHistorial();
+    await renderHistorial();
 
     await waitFor(() => {
       expect(screen.getByText('Laura Martínez')).toBeInTheDocument();
@@ -72,7 +77,7 @@ describe('Historial', () => {
   it('muestra el estado de cada estudiante con badge correcto', async () => {
     localStorage.setItem('token', 'tok');
     listarEstudiantes.mockResolvedValueOnce({ data: PAGE_1 });
-    renderHistorial();
+    await renderHistorial();
 
     await waitFor(() => screen.getByText('Laura Martínez'));
 
@@ -85,7 +90,7 @@ describe('Historial', () => {
   it('muestra el contador "1–3 de 3"', async () => {
     localStorage.setItem('token', 'tok');
     listarEstudiantes.mockResolvedValueOnce({ data: PAGE_1 });
-    renderHistorial();
+    await renderHistorial();
 
     await waitFor(() => {
       expect(screen.getByText('1–3 de 3')).toBeInTheDocument();
@@ -97,7 +102,7 @@ describe('Historial', () => {
     listarEstudiantes.mockResolvedValueOnce({
       data: { content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 20 },
     });
-    renderHistorial();
+    await renderHistorial();
 
     await waitFor(() => {
       expect(screen.getByText(/no hay estudiantes registrados/i)).toBeInTheDocument();
@@ -107,7 +112,7 @@ describe('Historial', () => {
   it('muestra error cuando la API falla', async () => {
     localStorage.setItem('token', 'tok');
     listarEstudiantes.mockRejectedValueOnce({ response: { status: 500 } });
-    renderHistorial();
+    await renderHistorial();
 
     await waitFor(() => {
       expect(screen.getByText(/no se pudo cargar el historial/i)).toBeInTheDocument();
@@ -122,7 +127,7 @@ describe('Historial', () => {
     });
 
     const user = userEvent.setup();
-    renderHistorial();
+    await renderHistorial();
     await waitFor(() => screen.getByText('Laura Martínez'));
 
     await user.type(screen.getByPlaceholderText(/buscar por número de documento/i), '20240001');
@@ -140,7 +145,7 @@ describe('Historial', () => {
     buscarEstudiantePorDocumento.mockRejectedValueOnce({ response: { status: 404 } });
 
     const user = userEvent.setup();
-    renderHistorial();
+    await renderHistorial();
     await waitFor(() => screen.getByText('Laura Martínez'));
 
     await user.type(screen.getByPlaceholderText(/buscar por número de documento/i), '99999');
@@ -156,7 +161,7 @@ describe('Historial', () => {
     listarEstudiantes.mockResolvedValueOnce({
       data: { ...PAGE_1, totalElements: 45, totalPages: 3, pageSize: 20 },
     });
-    renderHistorial();
+    await renderHistorial();
 
     await waitFor(() => screen.getByText('Laura Martínez'));
 

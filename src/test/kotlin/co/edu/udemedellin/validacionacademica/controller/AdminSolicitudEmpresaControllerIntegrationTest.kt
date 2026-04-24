@@ -13,8 +13,10 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
@@ -259,5 +261,75 @@ class AdminSolicitudEmpresaControllerIntegrationTest {
             post("/api/v1/admin/solicitudes-empresa/SOL-20260422-000001/marcar-en-revision")
                 .contentType(MediaType.APPLICATION_JSON).content("{}")
         ).andExpect(status().isForbidden)
+    }
+
+    // ── GET /api/v1/admin/solicitudes-empresa ─────────────────────────────────
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `listar sin filtro devuelve 200 con solicitudes y totalElements`() {
+        crearSolicitudYObtenerNumero()
+        crearSolicitudYObtenerNumero()
+
+        mockMvc.perform(get("/api/v1/admin/solicitudes-empresa"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.totalElements").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)))
+            .andExpect(jsonPath("$.content").isArray)
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `listar con filtro estado PENDIENTE devuelve solo solicitudes PENDIENTE`() {
+        crearSolicitudYObtenerNumero()
+
+        mockMvc.perform(
+            get("/api/v1/admin/solicitudes-empresa").param("estado", "PENDIENTE")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.content[0].estado").value("PENDIENTE"))
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `listar con estado invalido devuelve 400 con valores validos en mensaje`() {
+        mockMvc.perform(
+            get("/api/v1/admin/solicitudes-empresa").param("estado", "INVALIDO")
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("PENDIENTE")))
+    }
+
+    @Test
+    fun `listar sin JWT devuelve 401`() {
+        mockMvc.perform(get("/api/v1/admin/solicitudes-empresa"))
+            .andExpect(status().isUnauthorized)
+    }
+
+    // ── GET /api/v1/admin/solicitudes-empresa/{numero}/carta ──────────────────
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `descargar carta existente devuelve 200 con Content-Type pdf y Content-Disposition attachment`() {
+        val numero = crearSolicitudYObtenerNumero()
+
+        mockMvc.perform(get("/api/v1/admin/solicitudes-empresa/$numero/carta"))
+            .andExpect(status().isOk)
+            .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
+            .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+            .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename=")))
+            .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("Carta_$numero")))
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `descargar carta con numero inexistente devuelve 404`() {
+        mockMvc.perform(get("/api/v1/admin/solicitudes-empresa/SOL-19990101-999999/carta"))
+            .andExpect(status().isNotFound)
+    }
+
+    @Test
+    fun `descargar carta sin JWT devuelve 401`() {
+        mockMvc.perform(get("/api/v1/admin/solicitudes-empresa/SOL-20260422-000001/carta"))
+            .andExpect(status().isUnauthorized)
     }
 }

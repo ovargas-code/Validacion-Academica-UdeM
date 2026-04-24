@@ -1,4 +1,4 @@
-git commit -m "feat: endpoint publico de consulta de estado de solicitud empresa"package co.edu.udemedellin.validacionacademica.usecase
+package co.edu.udemedellin.validacionacademica.usecase
 
 import co.edu.udemedellin.validacionacademica.application.usecase.ConsultarEstadoPublicoSolicitudUseCase
 import co.edu.udemedellin.validacionacademica.domain.model.*
