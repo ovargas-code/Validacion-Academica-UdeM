@@ -18,7 +18,7 @@ export default function Login() {
       const token = res.data?.token || res.data?.accessToken || res.data;
       if (!token || typeof token !== 'string') throw new Error('Token inválido');
       localStorage.setItem('token', token);
-      navigate('/historial');
+      navigate('/admin/solicitudes');
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         setError('Credenciales incorrectas. Verifique usuario y contraseña.');
@@ -42,8 +42,9 @@ export default function Login() {
       <div className="card">
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Usuario</label>
+            <label className="form-label" htmlFor="login-username">Usuario</label>
             <input
+              id="login-username"
               className="form-input"
               type="text"
               value={username}
@@ -54,8 +55,9 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Contraseña</label>
+            <label className="form-label" htmlFor="login-password">Contraseña</label>
             <input
+              id="login-password"
               className="form-input"
               type="password"
               value={password}

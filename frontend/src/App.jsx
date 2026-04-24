@@ -6,6 +6,7 @@ import Verificar from './pages/Verificar';
 import Historial from './pages/Historial';
 import Login from './pages/Login';
 import SolicitudEmpresa from './pages/SolicitudEmpresa';
+import AdminSolicitudes from './pages/AdminSolicitudes';
 import './index.css';
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/verificar" element={<Verificar />} />
         <Route path="/historial" element={<Historial />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
       </Routes>
     </BrowserRouter>
   );

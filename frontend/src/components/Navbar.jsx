@@ -44,9 +44,14 @@ export default function Navbar() {
             Historial
           </NavLink>
           {isAdmin ? (
-            <button className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={handleLogout}>
-              Salir
-            </button>
+            <>
+              <NavLink to="/admin/solicitudes" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                Panel
+              </NavLink>
+              <button className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={handleLogout}>
+                Salir
+              </button>
+            </>
           ) : (
             <NavLink to="/login" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
               Admin

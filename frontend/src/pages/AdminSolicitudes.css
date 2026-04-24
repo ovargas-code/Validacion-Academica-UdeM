@@ -1,0 +1,281 @@
+/* ── Badge de estado EN_REVISION (local — no tocar index.css) ─────────── */
+
+.badge-review {
+  background: rgba(251, 140, 0, 0.15);
+  color: #fb8c00;
+  border: 1px solid rgba(251, 140, 0, 0.3);
+}
+
+/* ── Overlay del modal ────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+  max-width: 620px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modal-numero {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+  font-family: var(--font-body);
+}
+
+.modal-close:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.modal-body {
+  padding: 20px 24px;
+  flex: 1;
+}
+
+.modal-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin: 20px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-section-title:first-child {
+  margin-top: 0;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+
+@media (max-width: 560px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.modal-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.modal-field-value {
+  font-size: 14px;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.modal-footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── Botones de acción del modal ──────────────────────────────────────── */
+
+.btn-review {
+  background: rgba(251, 140, 0, 0.12);
+  border: 1px solid rgba(251, 140, 0, 0.3);
+  color: #fb8c00;
+}
+
+.btn-review:hover:not(:disabled) {
+  background: rgba(251, 140, 0, 0.22);
+}
+
+.btn-danger {
+  background: rgba(200, 16, 46, 0.12);
+  border: 1px solid rgba(200, 16, 46, 0.3);
+  color: var(--accent-light);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(200, 16, 46, 0.22);
+}
+
+/* ── Sub-formulario de rechazo ──────────────────────────────────────── */
+
+.rechazo-form {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rechazo-form textarea {
+  width: 100%;
+  min-height: 90px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 14px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.rechazo-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.12);
+}
+
+.rechazo-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ── Barra de filtro y contador ─────────────────────────────────────── */
+
+.as-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.as-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.as-filter label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Toast de feedback ──────────────────────────────────────────────── */
+
+.as-toast {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  min-width: 280px;
+  max-width: 500px;
+  animation: fadeIn 0.25s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Filas de la tabla clickeables ─────────────────────────────────── */
+
+.row-clickable {
+  cursor: pointer;
+}
+
+/* ── Botón de descarga carta ────────────────────────────────────────── */
+
+.btn-download {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.2s, color 0.2s;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.btn-download:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-download:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
