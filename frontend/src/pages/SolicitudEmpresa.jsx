@@ -43,8 +43,13 @@ function validateForm(form, carta) {
   if (!form.cargoContacto.trim()) errors.cargoContacto = 'Campo obligatorio';
   if (!form.correoContacto.trim()) errors.correoContacto = 'Campo obligatorio';
   else if (!emailRe.test(form.correoContacto.trim())) errors.correoContacto = 'Correo electrónico inválido';
+  if (!form.telefonoContacto.trim()) errors.telefonoContacto = 'Campo obligatorio';
+  if (!form.tipoDocumentoEstudiante) errors.tipoDocumentoEstudiante = 'Campo obligatorio';
   if (!form.documentoEstudiante.trim()) errors.documentoEstudiante = 'Campo obligatorio';
   if (!form.nombreEstudiante.trim()) errors.nombreEstudiante = 'Campo obligatorio';
+  if (!form.tipoValidacion) errors.tipoValidacion = 'Campo obligatorio';
+  if (!form.programaConsultado.trim()) errors.programaConsultado = 'Campo obligatorio';
+  if (!form.observaciones.trim()) errors.observaciones = 'Campo obligatorio';
   if (!carta) errors.carta = 'Debes adjuntar la carta de autorización en PDF';
   if (!form.aceptaTerminos) errors.aceptaTerminos = 'Debes aceptar los términos para continuar';
   return errors;
@@ -58,6 +63,8 @@ export default function SolicitudEmpresa() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [resultado, setResultado] = useState(null);
   const fileInputRef = useRef(null);
+  const validationErrors = validateForm(form, carta);
+  const isFormComplete = Object.keys(validationErrors).length === 0;
 
   const clearFieldError = (name) => {
     if (fieldErrors[name]) {
@@ -70,6 +77,14 @@ export default function SolicitudEmpresa() {
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     clearFieldError(name);
     setError(null);
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    const errors = validateForm(form, carta);
+    if (errors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: errors[name] }));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -113,13 +128,13 @@ export default function SolicitudEmpresa() {
         nombreContacto: form.nombreContacto.trim(),
         cargoContacto: form.cargoContacto.trim(),
         correoContacto: form.correoContacto.trim(),
-        telefonoContacto: form.telefonoContacto.trim() || null,
+        telefonoContacto: form.telefonoContacto.trim(),
         tipoDocumentoEstudiante: form.tipoDocumentoEstudiante,
         documentoEstudiante: form.documentoEstudiante.trim(),
         nombreEstudiante: form.nombreEstudiante.trim(),
-        programaConsultado: form.programaConsultado.trim() || null,
+        programaConsultado: form.programaConsultado.trim(),
         tipoValidacion: form.tipoValidacion,
-        observaciones: form.observaciones.trim() || null,
+        observaciones: form.observaciones.trim(),
         aceptaTerminos: form.aceptaTerminos,
       };
 
@@ -215,6 +230,8 @@ export default function SolicitudEmpresa() {
                   placeholder="Ej: Empresa S.A.S."
                   value={form.nombreEmpresa}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                   maxLength={200}
                 />
                 {fieldErrors.nombreEmpresa && <span className="field-error">{fieldErrors.nombreEmpresa}</span>}
@@ -228,6 +245,8 @@ export default function SolicitudEmpresa() {
                   placeholder="Ej: 890123456-1"
                   value={form.nitEmpresa}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                   maxLength={20}
                 />
                 {fieldErrors.nitEmpresa && <span className="field-error">{fieldErrors.nitEmpresa}</span>}
@@ -243,6 +262,8 @@ export default function SolicitudEmpresa() {
                   placeholder="Nombre completo"
                   value={form.nombreContacto}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                   maxLength={150}
                 />
                 {fieldErrors.nombreContacto && <span className="field-error">{fieldErrors.nombreContacto}</span>}
@@ -256,6 +277,8 @@ export default function SolicitudEmpresa() {
                   placeholder="Ej: Jefe de Talento Humano"
                   value={form.cargoContacto}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                   maxLength={100}
                 />
                 {fieldErrors.cargoContacto && <span className="field-error">{fieldErrors.cargoContacto}</span>}
@@ -272,21 +295,26 @@ export default function SolicitudEmpresa() {
                   placeholder="contacto@empresa.com"
                   value={form.correoContacto}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                   maxLength={254}
                 />
                 {fieldErrors.correoContacto && <span className="field-error">{fieldErrors.correoContacto}</span>}
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Teléfono de contacto</label>
+              <div className="form-group" id="field-telefonoContacto">
+                <label className="form-label">Teléfono de contacto *</label>
                 <input
-                  className="form-input"
+                  className={`form-input${fieldErrors.telefonoContacto ? ' has-error' : ''}`}
                   name="telefonoContacto"
                   placeholder="Ej: +57 604 3456789"
                   value={form.telefonoContacto}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                   maxLength={20}
                 />
+                {fieldErrors.telefonoContacto && <span className="field-error">{fieldErrors.telefonoContacto}</span>}
               </div>
             </div>
           </div>
@@ -296,18 +324,21 @@ export default function SolicitudEmpresa() {
             <div className="se-section-title">2. Datos del estudiante a verificar</div>
 
             <div className="grid-2">
-              <div className="form-group">
+              <div className="form-group" id="field-tipoDocumentoEstudiante">
                 <label className="form-label">Tipo de documento *</label>
                 <select
-                  className="form-select"
+                  className={`form-select${fieldErrors.tipoDocumentoEstudiante ? ' has-error' : ''}`}
                   name="tipoDocumentoEstudiante"
                   value={form.tipoDocumentoEstudiante}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                 >
                   {TIPOS_DOCUMENTO.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
+                {fieldErrors.tipoDocumentoEstudiante && <span className="field-error">{fieldErrors.tipoDocumentoEstudiante}</span>}
               </div>
 
               <div className="form-group" id="field-documentoEstudiante">
@@ -318,6 +349,8 @@ export default function SolicitudEmpresa() {
                   placeholder="Número de documento"
                   value={form.documentoEstudiante}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                   maxLength={20}
                 />
                 {fieldErrors.documentoEstudiante && <span className="field-error">{fieldErrors.documentoEstudiante}</span>}
@@ -332,51 +365,62 @@ export default function SolicitudEmpresa() {
                 placeholder="Nombre y apellidos del estudiante o egresado"
                 value={form.nombreEstudiante}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                required
                 maxLength={150}
               />
               {fieldErrors.nombreEstudiante && <span className="field-error">{fieldErrors.nombreEstudiante}</span>}
             </div>
 
             <div className="grid-2">
-              <div className="form-group">
+              <div className="form-group" id="field-tipoValidacion">
                 <label className="form-label">Tipo de verificación *</label>
                 <select
-                  className="form-select"
+                  className={`form-select${fieldErrors.tipoValidacion ? ' has-error' : ''}`}
                   name="tipoValidacion"
                   value={form.tipoValidacion}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                 >
                   {TIPOS_VALIDACION.map((t) => (
                     <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
+                {fieldErrors.tipoValidacion && <span className="field-error">{fieldErrors.tipoValidacion}</span>}
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Programa consultado</label>
+              <div className="form-group" id="field-programaConsultado">
+                <label className="form-label">Programa consultado *</label>
                 <input
-                  className="form-input"
+                  className={`form-input${fieldErrors.programaConsultado ? ' has-error' : ''}`}
                   name="programaConsultado"
                   placeholder="Ej: Ingeniería de Sistemas"
                   value={form.programaConsultado}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
                   maxLength={200}
                 />
+                {fieldErrors.programaConsultado && <span className="field-error">{fieldErrors.programaConsultado}</span>}
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Observaciones adicionales</label>
+            <div className="form-group" id="field-observaciones">
+              <label className="form-label">Observaciones adicionales *</label>
               <textarea
-                className="form-input"
+                className={`form-input${fieldErrors.observaciones ? ' has-error' : ''}`}
                 name="observaciones"
-                placeholder="Información adicional relevante para la verificación (opcional)"
+                placeholder="Información adicional relevante para la verificación"
                 value={form.observaciones}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                required
                 maxLength={500}
                 rows={3}
                 style={{ resize: 'vertical', minHeight: 72 }}
               />
+              {fieldErrors.observaciones && <span className="field-error">{fieldErrors.observaciones}</span>}
             </div>
           </div>
 
@@ -422,6 +466,7 @@ export default function SolicitudEmpresa() {
                   type="file"
                   accept=".pdf,application/pdf"
                   onChange={handleFileChange}
+                  required
                   ref={fileInputRef}
                 />
               </label>
@@ -439,6 +484,7 @@ export default function SolicitudEmpresa() {
                   name="aceptaTerminos"
                   checked={form.aceptaTerminos}
                   onChange={handleChange}
+                  required
                 />
                 <span className="checkbox-label">
                   Declaro que la información suministrada es verídica y que la empresa autoriza
@@ -464,7 +510,8 @@ export default function SolicitudEmpresa() {
           <button
             type="submit"
             className="btn btn-primary btn-full"
-            disabled={loading}
+            disabled={loading || !isFormComplete}
+            title={!isFormComplete ? 'Completa todos los campos obligatorios para enviar la solicitud' : undefined}
             style={{ marginTop: 8 }}
           >
             {loading ? <><span className="spinner" /> Enviando solicitud...</> : '✦ Enviar solicitud'}
