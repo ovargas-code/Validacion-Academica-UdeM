@@ -24,11 +24,15 @@ class DescargarCartaSolicitudUseCase(
     fun execute(numeroSolicitud: String): ByteArray {
         val solicitud = solicitudEmpresaRepositoryPort.findByNumeroSolicitud(numeroSolicitud)
             ?: throw NoSuchElementException("Solicitud no encontrada: $numeroSolicitud")
+        val rutaCarta = solicitud.rutaCarta
+            ?: throw IllegalArgumentException(
+                "La solicitud $numeroSolicitud no tiene carta de autorizaciÃ³n adjunta."
+            )
 
         return try {
-            fileStoragePort.loadAsBytes(solicitud.rutaCarta)
+            fileStoragePort.loadAsBytes(rutaCarta)
         } catch (e: NoSuchFileException) {
-            log.error("Carta no encontrada en disco para solicitud {}: {}", numeroSolicitud, solicitud.rutaCarta)
+            log.error("Carta no encontrada en disco para solicitud {}: {}", numeroSolicitud, rutaCarta)
             throw IllegalArgumentException(
                 "La carta asociada a la solicitud $numeroSolicitud no está disponible en el " +
                 "sistema de archivos. Contacta al administrador."

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   listarSolicitudesAdmin,
-  descargarCartaSolicitud,
+  descargarCertificadoFinalSolicitud,
   marcarEnRevision,
   aprobarSolicitud,
   rechazarSolicitud,
@@ -124,15 +124,15 @@ export default function AdminSolicitudes() {
   async function handleDescarga() {
     setActionLoading(true);
     try {
-      const res = await descargarCartaSolicitud(selected.numeroSolicitud);
+      const res = await descargarCertificadoFinalSolicitud(selected.numeroSolicitud);
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Carta_${selected.numeroSolicitud}.pdf`;
+      a.download = `Certificado_${selected.numeroSolicitud}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      showToast('error', extractErrorMessage(err, 'No se pudo descargar la carta.'));
+      showToast('error', extractErrorMessage(err, 'No se pudo descargar el certificado final.'));
     } finally {
       setActionLoading(false);
     }
@@ -374,13 +374,14 @@ export default function AdminSolicitudes() {
                 <button
                   className="btn-download"
                   onClick={handleDescarga}
-                  disabled={actionLoading}
+                  disabled={actionLoading || selected.estado !== 'APROBADA'}
+                  title={selected.estado !== 'APROBADA' ? 'Disponible cuando la solicitud este aprobada' : undefined}
                 >
                   {actionLoading
                     ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
                     : '⬇'
                   }
-                  Descargar carta PDF
+                  Descargar certificado final
                 </button>
               </div>
             </div>

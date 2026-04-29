@@ -15,12 +15,16 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 /**
- * Caso de uso: recibe los datos del formulario de solicitud de validación por empresa y la carta
- * de autorización en PDF, persiste el archivo en disco y el registro en base de datos.
+ * Caso de uso: recibe los datos del formulario de solicitud de validacion por empresa y guarda
+ * el registro en base de datos.
+ *
+ * La carta de autorizacion PDF era un documento de entrada del usuario. Ya no es obligatoria;
+ * si llega desde clientes antiguos se almacena como adjunto legado, pero no participa en la
+ * creacion ni en la generacion del certificado final.
  *
  * Flujo:
  * 1. Valida que [CrearSolicitudEmpresaCommand.aceptaTerminos] sea `true`.
- * 2. Almacena el PDF de la carta en `uploads/solicitudes-empresa/{yyyy}/{MM}/{uuid}.pdf`.
+ * 2. Si se adjuntó carta, almacena el PDF en `uploads/solicitudes-empresa/{yyyy}/{MM}/{uuid}.pdf`.
  * 3. Genera el número de radicado `SOL-YYYYMMDD-NNNNNN`.
  * 4. Persiste la [SolicitudEmpresa] con estado [EstadoSolicitud.PENDIENTE].
  * 5. Retorna la entidad guardada.
@@ -38,22 +42,25 @@ class CrearSolicitudEmpresaUseCase(
      * Crea una nueva solicitud de validación académica por empresa.
      *
      * @param command   Datos del formulario (empresa, estudiante, tipo de validación).
-     * @param cartaStream Stream del archivo PDF de la carta de autorización.
+     * @param autorizacionPdfStream Stream opcional legado del PDF de autorizacion de entrada.
      * @return La [SolicitudEmpresa] persistida con su [SolicitudEmpresa.numeroSolicitud] asignado.
      * @throws IllegalArgumentException si [CrearSolicitudEmpresaCommand.aceptaTerminos] es `false`.
      */
     @Transactional
-    fun execute(command: CrearSolicitudEmpresaCommand, cartaStream: InputStream): SolicitudEmpresa {
+    fun execute(command: CrearSolicitudEmpresaCommand, autorizacionPdfStream: InputStream?): SolicitudEmpresa {
         require(command.aceptaTerminos) {
             "La solicitud requiere aceptación de los términos de uso y política de tratamiento de datos."
         }
 
+        // Documento de entrada legado: no es obligatorio y no es el certificado final.
         val today = LocalDate.now()
-        val subPath = "solicitudes-empresa/${today.format(yearMonthFormatter)}"
-        val filename = "${UUID.randomUUID()}.pdf"
-
-        val rutaCarta = fileStoragePort.store(cartaStream, subPath, filename)
-        log.info("Carta almacenada en: {}", rutaCarta)
+        val rutaCarta = autorizacionPdfStream?.let {
+            val subPath = "solicitudes-empresa/${today.format(yearMonthFormatter)}"
+            val filename = "${UUID.randomUUID()}.pdf"
+            fileStoragePort.store(it, subPath, filename).also { ruta ->
+                log.info("Carta almacenada en: {}", ruta)
+            }
+        }
 
         val numeroSolicitud = generarNumeroSolicitudService.generar(today)
 

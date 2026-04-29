@@ -1,6 +1,7 @@
 package co.edu.udemedellin.validacionacademica.infrastructure.rest.controller
 
 import co.edu.udemedellin.validacionacademica.application.usecase.AprobarSolicitudEmpresaUseCase
+import co.edu.udemedellin.validacionacademica.application.usecase.DescargarCertificadoSolicitudEmpresaUseCase
 import co.edu.udemedellin.validacionacademica.application.usecase.DescargarCartaSolicitudUseCase
 import co.edu.udemedellin.validacionacademica.application.usecase.ListarSolicitudesEmpresaUseCase
 import co.edu.udemedellin.validacionacademica.application.usecase.MarcarEnRevisionUseCase
@@ -47,7 +48,8 @@ class AdminSolicitudEmpresaController(
     private val aprobarSolicitudEmpresaUseCase: AprobarSolicitudEmpresaUseCase,
     private val rechazarSolicitudEmpresaUseCase: RechazarSolicitudEmpresaUseCase,
     private val listarSolicitudesEmpresaUseCase: ListarSolicitudesEmpresaUseCase,
-    private val descargarCartaSolicitudUseCase: DescargarCartaSolicitudUseCase
+    private val descargarCartaSolicitudUseCase: DescargarCartaSolicitudUseCase,
+    private val descargarCertificadoSolicitudEmpresaUseCase: DescargarCertificadoSolicitudEmpresaUseCase
 ) {
     private val log = LoggerFactory.getLogger(AdminSolicitudEmpresaController::class.java)
 
@@ -103,6 +105,30 @@ class AdminSolicitudEmpresaController(
     }
 
     // ── POST — transiciones de estado ─────────────────────────────────────────
+
+    // Descarga del documento final de salida. No depende de carta de autorizacion adjunta.
+
+    @GetMapping("/{numero}/certificado-final")
+    @Operation(
+        summary = "Descargar certificado final",
+        description = """Genera y descarga el certificado final de verificacion academica para una solicitud aprobada.
+
+Este PDF es el resultado del tramite. No es la carta de autorizacion de entrada."""
+    )
+    fun descargarCertificadoFinal(
+        @Parameter(description = "Numero de radicado", example = "SOL-20260423-000001")
+        @PathVariable numero: String
+    ): ResponseEntity<ByteArray> {
+        log.info("Descargar certificado final: {}", numero)
+        val certificadoFinal = descargarCertificadoSolicitudEmpresaUseCase.execute(numero)
+        val headers = HttpHeaders().apply {
+            contentType = MediaType.APPLICATION_PDF
+            contentDisposition = ContentDisposition.attachment()
+                .filename("Certificado_$numero.pdf")
+                .build()
+        }
+        return ResponseEntity.ok().headers(headers).body(certificadoFinal)
+    }
 
     @PostMapping("/{numero}/marcar-en-revision")
     @Operation(

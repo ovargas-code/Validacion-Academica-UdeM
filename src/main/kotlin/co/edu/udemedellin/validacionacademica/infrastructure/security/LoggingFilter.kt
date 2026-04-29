@@ -41,6 +41,14 @@ class LoggingFilter : OncePerRequestFilter() {
         try {
             log.info("--> {} {}", request.method, request.requestURI)
             filterChain.doFilter(request, response)
+        } catch (ex: Exception) {
+            log.error(
+                "Excepcion no manejada durante {} {}",
+                request.method,
+                request.requestURI,
+                ex
+            )
+            throw ex
         } finally {
             val duration = System.currentTimeMillis() - start
             log.info("<-- {} {} {} ({}ms)", request.method, request.requestURI, response.status, duration)

@@ -6,11 +6,14 @@ import { crearSolicitudEmpresa } from '../api/api';
 
 vi.mock('../api/api', () => ({
   crearSolicitudEmpresa: vi.fn(),
-  urlPlantillaCarta: vi.fn(() => '/plantilla-carta'),
+  descargarCertificadoPDF: vi.fn((code) => `http://localhost:8080/api/v1/verificaciones/${code}/pdf`),
   extractErrorMessage: vi.fn((err, fallback) => fallback || 'Error'),
+  resolverUrlBackend: vi.fn((pathOrUrl) =>
+    pathOrUrl?.startsWith('http') ? pathOrUrl : `http://localhost:8080${pathOrUrl}`
+  ),
 }));
 
-async function fillRequiredTextFields(user, { email = 'contacto@empresa.com' } = {}) {
+async function fillRequiredTextFields(user, { email = 'contacto@empresa.com', observaciones = 'Validacion laboral' } = {}) {
   await user.type(screen.getByPlaceholderText('Ej: Empresa S.A.S.'), 'Empresa S.A.S.');
   await user.type(screen.getByPlaceholderText('Ej: 890123456-1'), '890123456-1');
   await user.type(screen.getByPlaceholderText('Nombre completo'), 'Ana Gomez');
@@ -20,12 +23,12 @@ async function fillRequiredTextFields(user, { email = 'contacto@empresa.com' } =
   await user.type(screen.getByPlaceholderText('Número de documento'), '123456789');
   await user.type(screen.getByPlaceholderText('Nombre y apellidos del estudiante o egresado'), 'Juan Perez');
   await user.type(screen.getByPlaceholderText('Ej: Ingeniería de Sistemas'), 'Ingenieria de Sistemas');
-  await user.type(screen.getByPlaceholderText('Información adicional relevante para la verificación'), 'Validacion laboral');
+  if (observaciones) {
+    await user.type(screen.getByPlaceholderText('Información adicional relevante para la verificación'), observaciones);
+  }
 }
 
-async function uploadCartaAndAcceptPolicy(user, container) {
-  const file = new File(['contenido'], 'carta.pdf', { type: 'application/pdf' });
-  await user.upload(container.querySelector('#carta-input'), file);
+async function acceptPolicy(user) {
   await user.click(screen.getByRole('checkbox'));
 }
 
@@ -49,20 +52,29 @@ describe('SolicitudEmpresa', () => {
 
   it('mantiene deshabilitado el envio con correo invalido', async () => {
     const user = userEvent.setup();
-    const { container } = render(<SolicitudEmpresa />);
+    render(<SolicitudEmpresa />);
 
     await fillRequiredTextFields(user, { email: 'correo-invalido' });
-    await uploadCartaAndAcceptPolicy(user, container);
+    await acceptPolicy(user);
+
+    expect(screen.getByRole('button', { name: /enviar solicitud/i })).toBeDisabled();
+  });
+
+  it('mantiene deshabilitado el envio sin aceptar tratamiento de datos', async () => {
+    const user = userEvent.setup();
+    render(<SolicitudEmpresa />);
+
+    await fillRequiredTextFields(user);
 
     expect(screen.getByRole('button', { name: /enviar solicitud/i })).toBeDisabled();
   });
 
   it('habilita y envia cuando todos los campos visibles estan completos', async () => {
     const user = userEvent.setup();
-    const { container } = render(<SolicitudEmpresa />);
+    render(<SolicitudEmpresa />);
 
     await fillRequiredTextFields(user);
-    await uploadCartaAndAcceptPolicy(user, container);
+    await acceptPolicy(user);
 
     const submit = screen.getByRole('button', { name: /enviar solicitud/i });
     expect(submit).toBeEnabled();
@@ -70,5 +82,43 @@ describe('SolicitudEmpresa', () => {
     await user.click(submit);
 
     expect(crearSolicitudEmpresa).toHaveBeenCalledTimes(1);
+    const formData = crearSolicitudEmpresa.mock.calls[0][0];
+    expect(formData.has('datos')).toBe(true);
+    expect(formData.has('carta')).toBe(false);
+  });
+
+  it('permite enviar con observaciones adicionales vacias', async () => {
+    const user = userEvent.setup();
+    render(<SolicitudEmpresa />);
+
+    await fillRequiredTextFields(user, { observaciones: '' });
+    await acceptPolicy(user);
+
+    const submit = screen.getByRole('button', { name: /enviar solicitud/i });
+    expect(submit).toBeEnabled();
+
+    await user.click(submit);
+
+    expect(crearSolicitudEmpresa).toHaveBeenCalledTimes(1);
+  });
+
+  it('muestra descarga del certificado final cuando el backend devuelve codigo', async () => {
+    crearSolicitudEmpresa.mockResolvedValueOnce({
+      data: {
+        numeroSolicitud: 'SOL-001',
+        estado: 'APROBADA',
+        correoContacto: 'contacto@empresa.com',
+        codigoVerificacion: 'UDEM-ABC123',
+      },
+    });
+    const user = userEvent.setup();
+    render(<SolicitudEmpresa />);
+
+    await fillRequiredTextFields(user);
+    await acceptPolicy(user);
+    await user.click(screen.getByRole('button', { name: /enviar solicitud/i }));
+
+    const link = await screen.findByRole('link', { name: /descargar certificado/i });
+    expect(link).toHaveAttribute('href', 'http://localhost:8080/api/v1/verificaciones/UDEM-ABC123/pdf');
   });
 });

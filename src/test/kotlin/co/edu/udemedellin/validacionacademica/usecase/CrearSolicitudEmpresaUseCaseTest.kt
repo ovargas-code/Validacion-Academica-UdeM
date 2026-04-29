@@ -56,6 +56,25 @@ class CrearSolicitudEmpresaUseCaseTest {
     }
 
     @Test
+    fun `debe crear la solicitud sin guardar carta cuando no se adjunta archivo`() {
+        val command = commandDummy()
+        val numeroEsperado = "SOL-20260421-000001"
+        val solicitudGuardada = solicitudDummy(numeroEsperado, null)
+
+        every { numerador.generar(any()) } returns numeroEsperado
+        every { solicitudRepo.save(any()) } returns solicitudGuardada
+
+        val resultado = useCase.execute(command, null)
+
+        assertEquals(numeroEsperado, resultado.numeroSolicitud)
+        assertEquals(null, resultado.rutaCarta)
+        assertEquals(EstadoSolicitud.PENDIENTE, resultado.estado)
+        verify(exactly = 0) { fileStorage.store(any(), any(), any()) }
+        verify(exactly = 1) { numerador.generar(any()) }
+        verify(exactly = 1) { solicitudRepo.save(any()) }
+    }
+
+    @Test
     fun `debe lanzar IllegalArgumentException cuando aceptaTerminos es false`() {
         val commandSinTerminos = commandDummy().copy(aceptaTerminos = false)
         val cartaStream = ByteArrayInputStream("pdf".toByteArray())
@@ -99,7 +118,7 @@ class CrearSolicitudEmpresaUseCaseTest {
         aceptaTerminos = true
     )
 
-    private fun solicitudDummy(numero: String, rutaCarta: String) = SolicitudEmpresa(
+    private fun solicitudDummy(numero: String, rutaCarta: String?) = SolicitudEmpresa(
         id = 1L,
         numeroSolicitud = numero,
         nombreEmpresa = "Empresa Test S.A.S.",

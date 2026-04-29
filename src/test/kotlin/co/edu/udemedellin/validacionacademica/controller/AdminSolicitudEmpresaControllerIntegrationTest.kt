@@ -42,7 +42,10 @@ class AdminSolicitudEmpresaControllerIntegrationTest {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private fun crearSolicitudYObtenerNumero(documentoEstudiante: String = "10350001"): String {
+    private fun crearSolicitudYObtenerNumero(
+        documentoEstudiante: String = "10350001",
+        adjuntarCartaAutorizacion: Boolean = false
+    ): String {
         val datos = mapOf(
             "nombreEmpresa"           to "Empresa Test S.A.S.",
             "nitEmpresa"              to "890123456-1",
@@ -58,11 +61,13 @@ class AdminSolicitudEmpresaControllerIntegrationTest {
         val datosPart = MockPart("datos", objectMapper.writeValueAsString(datos).toByteArray()).also {
             it.headers.contentType = MediaType.APPLICATION_JSON
         }
-        val carta = MockMultipartFile("carta", "carta.pdf", "application/pdf", "contenido-pdf".toByteArray())
+        val request = multipart("/api/v1/solicitudes-empresa").part(datosPart)
+        if (adjuntarCartaAutorizacion) {
+            val carta = MockMultipartFile("carta", "carta.pdf", "application/pdf", "contenido-pdf".toByteArray())
+            request.file(carta)
+        }
 
-        val result = mockMvc.perform(
-            multipart("/api/v1/solicitudes-empresa").part(datosPart).file(carta)
-        ).andExpect(status().isCreated).andReturn()
+        val result = mockMvc.perform(request).andExpect(status().isCreated).andReturn()
 
         return objectMapper.readTree(result.response.contentAsString)["numeroSolicitud"].asText()
     }
@@ -170,6 +175,32 @@ class AdminSolicitudEmpresaControllerIntegrationTest {
     }
 
     // ── Transición a RECHAZADA ────────────────────────────────────────────────
+
+    @Test
+    @WithMockUser(username = "admin", roles = ["ADMIN"])
+    fun `descargar certificado final de solicitud aprobada devuelve PDF`() {
+        val numero = crearSolicitudYObtenerNumero()
+        mockMvc.perform(
+            post("/api/v1/admin/solicitudes-empresa/$numero/aprobar")
+                .contentType(MediaType.APPLICATION_JSON).content("{}")
+        ).andExpect(status().isOk)
+
+        mockMvc.perform(get("/api/v1/admin/solicitudes-empresa/$numero/certificado-final"))
+            .andExpect(status().isOk)
+            .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
+            .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+            .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("Certificado_$numero")))
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = ["ADMIN"])
+    fun `descargar certificado final antes de aprobar devuelve 409`() {
+        val numero = crearSolicitudYObtenerNumero()
+
+        mockMvc.perform(get("/api/v1/admin/solicitudes-empresa/$numero/certificado-final"))
+            .andExpect(status().isConflict)
+            .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("solicitudes aprobadas")))
+    }
 
     @Test
     @WithMockUser(username = "admin", roles = ["ADMIN"])
@@ -310,7 +341,7 @@ class AdminSolicitudEmpresaControllerIntegrationTest {
     @Test
     @WithMockUser(roles = ["ADMIN"])
     fun `descargar carta existente devuelve 200 con Content-Type pdf y Content-Disposition attachment`() {
-        val numero = crearSolicitudYObtenerNumero()
+        val numero = crearSolicitudYObtenerNumero(adjuntarCartaAutorizacion = true)
 
         mockMvc.perform(get("/api/v1/admin/solicitudes-empresa/$numero/carta"))
             .andExpect(status().isOk)

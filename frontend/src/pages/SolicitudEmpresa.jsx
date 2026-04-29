@@ -1,5 +1,10 @@
-import { useState, useRef } from 'react';
-import { crearSolicitudEmpresa, urlPlantillaCarta, extractErrorMessage } from '../api/api';
+import { useState } from 'react';
+import {
+  crearSolicitudEmpresa,
+  descargarCertificadoPDF,
+  extractErrorMessage,
+  resolverUrlBackend,
+} from '../api/api';
 import './SolicitudEmpresa.css';
 
 const TIPOS_DOCUMENTO = ['CC', 'CE', 'PAS', 'TI'];
@@ -7,8 +12,6 @@ const TIPOS_VALIDACION = [
   { value: 'DEGREE', label: 'Verificación de título (DEGREE)' },
   { value: 'ENROLLMENT', label: 'Verificación de matrícula (ENROLLMENT)' },
 ];
-const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-
 const INITIAL_FORM = {
   nombreEmpresa: '',
   nitEmpresa: '',
@@ -25,13 +28,45 @@ const INITIAL_FORM = {
   aceptaTerminos: false,
 };
 
-function formatBytes(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+const CERTIFICADO_URL_FIELDS = [
+  'urlDescarga',
+  'descargaUrl',
+  'downloadUrl',
+  'certificadoUrl',
+  'urlCertificado',
+  'pdfUrl',
+  'cartaFinalUrl',
+];
+const CERTIFICADO_CODE_FIELDS = ['codigo', 'codigoVerificacion', 'verificationCode', 'code', 'token'];
+const CERTIFICADO_PDF_FIELDS = ['pdf', 'certificado', 'certificadoPdf', 'pdfBase64'];
+
+function firstStringValue(source, fields) {
+  if (!source) return null;
+  for (const field of fields) {
+    const value = source[field];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
 }
 
-function validateForm(form, carta) {
+function certificadoFinalDownload(resultado) {
+  const directUrl = firstStringValue(resultado, CERTIFICADO_URL_FIELDS);
+  if (directUrl) return resolverUrlBackend(directUrl);
+
+  const code = firstStringValue(resultado, CERTIFICADO_CODE_FIELDS);
+  if (code) return descargarCertificadoPDF(code);
+
+  const pdf = firstStringValue(resultado, CERTIFICADO_PDF_FIELDS);
+  if (pdf) {
+    return pdf.startsWith('data:')
+      ? pdf
+      : `data:application/pdf;base64,${pdf.replace(/^data:application\/pdf;base64,/, '')}`;
+  }
+
+  return null;
+}
+
+function validateForm(form) {
   const errors = {};
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const nitRe = /^[0-9]{6,10}(-[0-9])?$/;
@@ -49,21 +84,17 @@ function validateForm(form, carta) {
   if (!form.nombreEstudiante.trim()) errors.nombreEstudiante = 'Campo obligatorio';
   if (!form.tipoValidacion) errors.tipoValidacion = 'Campo obligatorio';
   if (!form.programaConsultado.trim()) errors.programaConsultado = 'Campo obligatorio';
-  if (!form.observaciones.trim()) errors.observaciones = 'Campo obligatorio';
-  if (!carta) errors.carta = 'Debes adjuntar la carta de autorización en PDF';
   if (!form.aceptaTerminos) errors.aceptaTerminos = 'Debes aceptar los términos para continuar';
   return errors;
 }
 
 export default function SolicitudEmpresa() {
   const [form, setForm] = useState(INITIAL_FORM);
-  const [carta, setCarta] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [resultado, setResultado] = useState(null);
-  const fileInputRef = useRef(null);
-  const validationErrors = validateForm(form, carta);
+  const validationErrors = validateForm(form);
   const isFormComplete = Object.keys(validationErrors).length === 0;
 
   const clearFieldError = (name) => {
@@ -81,35 +112,15 @@ export default function SolicitudEmpresa() {
 
   const handleBlur = (e) => {
     const { name } = e.target;
-    const errors = validateForm(form, carta);
+    const errors = validateForm(form);
     if (errors[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: errors[name] }));
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) { setCarta(null); return; }
-
-    if (!file.name.toLowerCase().endsWith('.pdf') || file.type !== 'application/pdf') {
-      setFieldErrors((prev) => ({ ...prev, carta: 'Solo se aceptan archivos PDF (.pdf)' }));
-      setCarta(null);
-      e.target.value = '';
-      return;
-    }
-    if (file.size > MAX_FILE_BYTES) {
-      setFieldErrors((prev) => ({ ...prev, carta: `El archivo supera el límite de 10 MB (tamaño: ${formatBytes(file.size)})` }));
-      setCarta(null);
-      e.target.value = '';
-      return;
-    }
-    clearFieldError('carta');
-    setCarta(file);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const errors = validateForm(form, carta);
+    const errors = validateForm(form);
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       // Scroll al primer error
@@ -140,7 +151,6 @@ export default function SolicitudEmpresa() {
 
       const formData = new FormData();
       formData.append('datos', new Blob([JSON.stringify(datos)], { type: 'application/json' }));
-      formData.append('carta', carta);
 
       const res = await crearSolicitudEmpresa(formData);
       setResultado(res.data);
@@ -156,16 +166,16 @@ export default function SolicitudEmpresa() {
 
   const handleNuevaSolicitud = () => {
     setForm(INITIAL_FORM);
-    setCarta(null);
     setResultado(null);
     setError(null);
     setFieldErrors({});
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // ── Panel de éxito ──────────────────────────────────────────────────────
 
   if (resultado) {
+    const certificadoHref = certificadoFinalDownload(resultado);
+
     return (
       <div className="page fade-in">
         <div className="page-header">
@@ -189,6 +199,18 @@ export default function SolicitudEmpresa() {
               El equipo de validación académica de la Universidad de Medellín revisará
               tu solicitud y se comunicará con <strong>{resultado.correoContacto}</strong>.
             </div>
+            {certificadoHref && (
+              <a
+                className="btn btn-primary btn-full"
+                style={{ marginTop: 16 }}
+                href={certificadoHref}
+                download={`Certificado_${resultado.numeroSolicitud || 'verificacion'}.pdf`}
+                target={certificadoHref.startsWith('data:') ? undefined : '_blank'}
+                rel={certificadoHref.startsWith('data:') ? undefined : 'noopener noreferrer'}
+              >
+                Descargar certificado
+              </a>
+            )}
             <button
               className="btn btn-primary btn-full"
               style={{ marginTop: 16 }}
@@ -210,7 +232,7 @@ export default function SolicitudEmpresa() {
         <h1>Solicitud de Verificación Empresarial</h1>
         <p>
           Diligencia el formulario para solicitar la verificación académica de un estudiante
-          o egresado de la Universidad de Medellín. Adjunta la carta de autorización firmada.
+          o egresado de la Universidad de Medellín.
         </p>
       </div>
 
@@ -407,7 +429,7 @@ export default function SolicitudEmpresa() {
             </div>
 
             <div className="form-group" id="field-observaciones">
-              <label className="form-label">Observaciones adicionales *</label>
+              <label className="form-label">Observaciones adicionales</label>
               <textarea
                 className={`form-input${fieldErrors.observaciones ? ' has-error' : ''}`}
                 name="observaciones"
@@ -415,62 +437,47 @@ export default function SolicitudEmpresa() {
                 value={form.observaciones}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                required
                 maxLength={500}
                 rows={3}
                 style={{ resize: 'vertical', minHeight: 72 }}
               />
-              {fieldErrors.observaciones && <span className="field-error">{fieldErrors.observaciones}</span>}
             </div>
           </div>
 
-          {/* ── Sección 3: Carta y consentimiento ───────────────────────── */}
+          {/* ── Sección 3: Autorización y consentimiento ────────────────── */}
           <div className="se-section">
-            <div className="se-section-title">3. Carta de autorización y consentimiento</div>
+            <div className="se-section-title">3. Autorización y consentimiento</div>
 
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.6 }}>
-              Adjunta la carta de autorización firmada por el representante legal de la empresa
-              en formato PDF (máx. 10 MB). Puedes descargar la plantilla modelo a continuación.
-            </p>
-
-            <a
-              href={urlPlantillaCarta()}
-              download
-              className="plantilla-link"
-              style={{ display: 'inline-flex', marginBottom: 20 }}
-            >
-              📄 Descargar plantilla de carta de autorización (.docx)
-            </a>
-
-            <div className="form-group" id="field-carta">
-              <label className="form-label">Carta de autorización (PDF) *</label>
-              <label
-                className={`upload-zone${carta ? ' has-file' : ''}${fieldErrors.carta ? ' has-error' : ''}`}
-                htmlFor="carta-input"
-              >
-                <div className="upload-icon">{carta ? '📎' : '☁️'}</div>
-                {carta ? (
-                  <>
-                    <div className="upload-file-name">{carta.name}</div>
-                    <div className="upload-file-size">{formatBytes(carta.size)}</div>
-                    <div className="upload-hint" style={{ marginTop: 8 }}>Haz clic para cambiar el archivo</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="upload-hint">Haz clic para seleccionar el PDF</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Solo archivos .pdf · Máximo 10 MB</div>
-                  </>
-                )}
-                <input
-                  id="carta-input"
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  onChange={handleFileChange}
-                  required
-                  ref={fileInputRef}
-                />
-              </label>
-              {fieldErrors.carta && <span className="field-error">{fieldErrors.carta}</span>}
+            <div className="legal-scroll-box" aria-label="Autorización de tratamiento de datos personales">
+              <p>
+                De conformidad con lo establecido en la ley 1581 de 2012, reglamentada por el Decreto
+                1377 de 2013, así como las demás normas que la modifiquen, sustituyan o deroguen,
+                manifiesto que autorizo de manera libre, previa, expresa, inequívoca y debidamente
+                informada a la UNIVERSIDAD DE MEDELLÍN (Nit. 890.902.920-1) en calidad de responsable
+                del tratamiento de mis datos personales, para recolectar, almacenar, transferir y
+                transmitir a terceros aliados, circular y en general utilizar los datos personales
+                suministrados en este formulario y los que a futuro suministre, para las siguientes
+                finalidades: i) Realizar actividades promocionales y encuestas de información. ii)
+                Invitación a conferencias, charlas y remisión de actividades de interés. iii) Para la
+                presentación de quejas, denuncias o reportes ante las autoridades competentes. iv)
+                Finalidades administrativas de seguimiento a la gestión de la Institución. v) Reportes
+                de usabilidad de la plataforma y de gestión de la misma. vi) Las demás relacionadas con
+                la información recolectada.
+              </p>
+              <p>
+                Manifiesto que en calidad de titular de los datos personales suministrados, puedo
+                solicitar la supresión, cancelación, corrección o actualización de la autorización que
+                otorgo, en los términos dispuestos por la normatividad vigente en materia de protección
+                de datos, y de acuerdo con lo previsto en la Política para el Manejo y Tratamiento de
+                Datos Personales, que puede ser consultada en el siguiente link:{' '}
+                <a
+                  href="https://udemedellin.edu.co/politica-para-el-manejo-y-tratamiento-de-datos-personales/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  https://udemedellin.edu.co/politica-para-el-manejo-y-tratamiento-de-datos-personales/
+                </a>
+              </p>
             </div>
 
             <div className="form-group" id="field-aceptaTerminos">

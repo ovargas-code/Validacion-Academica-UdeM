@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = '';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -84,6 +84,13 @@ export const verificarCertificado = (code) =>
 export const descargarCertificadoPDF = (code) =>
   `${BASE_URL}/api/v1/verificaciones/${code}/pdf`;
 
+export const resolverUrlBackend = (pathOrUrl) => {
+  if (!pathOrUrl) return null;
+  if (/^https?:\/\//i.test(pathOrUrl) || pathOrUrl.startsWith('data:')) return pathOrUrl;
+  const path = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+  return `${BASE_URL}${path}`;
+};
+
 // Estudiantes (requieren ROLE_ADMIN + JWT)
 export const listarEstudiantes = (page = 0, size = 20) =>
   api.get('/api/v1/students', { params: { page, size } });
@@ -105,9 +112,7 @@ export const confirmarVerificacion = (token, code) =>
 
 /**
  * Envía el formulario de solicitud de verificación académica por empresa.
- * El argumento debe ser un FormData con dos partes:
- *   - "datos": Blob JSON con los campos de la solicitud
- *   - "carta": File PDF de la carta de autorización
+ * El argumento debe ser un FormData con la parte "datos" como Blob JSON.
  *
  * Se pasa Content-Type undefined para que axios no sobreescriba el
  * multipart/form-data con boundary que el navegador construye automáticamente.
@@ -132,8 +137,8 @@ export const listarSolicitudesAdmin = (page = 0, size = 20, estado = null) => {
   return api.get('/api/v1/admin/solicitudes-empresa', { params });
 };
 
-export const descargarCartaSolicitud = (numero) =>
-  api.get(`/api/v1/admin/solicitudes-empresa/${numero}/carta`, {
+export const descargarCertificadoFinalSolicitud = (numero) =>
+  api.get(`/api/v1/admin/solicitudes-empresa/${numero}/certificado-final`, {
     responseType: 'blob',
   });
 

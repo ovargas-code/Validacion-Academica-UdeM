@@ -40,7 +40,7 @@ import javax.crypto.spec.SecretKeySpec
 open class SecurityConfig(
     private val jwtProperties: JwtProperties,
     private val securityProperties: SecurityProperties,
-    @org.springframework.beans.factory.annotation.Value("\${app.security.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    @org.springframework.beans.factory.annotation.Value("\${app.security.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000}")
     private val corsAllowedOrigins: List<String>
 ) {
 
@@ -197,8 +197,8 @@ open class SecurityConfig(
             // En producción definir via variable de entorno CORS_ALLOWED_ORIGINS
             allowedOrigins = corsAllowedOrigins
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            allowedHeaders = listOf("Authorization", "Content-Type", "Accept")
-            allowCredentials = true
+            allowedHeaders = listOf("Content-Type", "Authorization")
+            allowCredentials = false
             maxAge = 3600L
         }
         return UrlBasedCorsConfigurationSource().apply {

@@ -36,18 +36,18 @@ import org.springframework.web.multipart.MultipartFile
  *
  * ## Contrato multipart para POST /api/v1/solicitudes-empresa
  *
- * El request debe enviarse como `multipart/form-data` con exactamente dos partes:
+ * El request debe enviarse como `multipart/form-data` con la parte `datos` obligatoria
+ * y, solo para clientes antiguos, la parte `carta` opcional:
  *
  * | Parte   | Content-Type       | Descripción                                              |
  * |---------|--------------------|----------------------------------------------------------|
  * | `datos` | `application/json` | JSON con los campos de [CrearSolicitudEmpresaRequest]    |
- * | `carta` | `application/pdf`  | PDF de la carta de autorización firmada (máx. 10 MB)    |
+ * | `carta` | `application/pdf`  | PDF legado opcional de autorizacion. No se exige para crear la solicitud. |
  *
  * Ejemplo con Fetch API:
  * ```js
  * const formData = new FormData()
  * formData.append("datos", new Blob([JSON.stringify(datos)], { type: "application/json" }))
- * formData.append("carta", archivoPdf)
  * fetch("/api/v1/solicitudes-empresa", { method: "POST", body: formData })
  * ```
  *
@@ -76,7 +76,7 @@ class SolicitudEmpresaController(
 
 **Partes del multipart:**
 - `datos` (application/json): campos del formulario según el esquema de CrearSolicitudEmpresaRequest.
-- `carta` (application/pdf): carta de autorización firmada en formato PDF (máximo 10 MB).
+- `carta` (application/pdf): opcional legado. No se exige para crear la solicitud.
 
 La respuesta incluye el **número de radicado** (`numeroSolicitud`) en formato `SOL-YYYYMMDD-NNNNNN`."""
     )
@@ -89,14 +89,14 @@ La respuesta incluye el **número de radicado** (`numeroSolicitud`) en formato `
     )
     fun crear(
         @RequestPart("datos") @Valid datos: CrearSolicitudEmpresaRequest,
-        @RequestPart("carta") carta: MultipartFile
+        @RequestPart("carta", required = false) cartaAutorizacion: MultipartFile?
     ): ResponseEntity<SolicitudEmpresaResponse> {
         log.info(
             "Nueva solicitud empresa: empresa={}, doc={}",
             datos.nombreEmpresa, datos.documentoEstudiante
         )
 
-        validarArchivoPdf(carta)
+        cartaAutorizacion?.let { validarArchivoPdf(it) }
 
         val command = CrearSolicitudEmpresaCommand(
             nombreEmpresa = datos.nombreEmpresa,
@@ -111,10 +111,10 @@ La respuesta incluye el **número de radicado** (`numeroSolicitud`) en formato `
             programaConsultado = datos.programaConsultado,
             tipoValidacion = datos.tipoValidacion,
             observaciones = datos.observaciones,
-            aceptaTerminos = datos.aceptaTerminos
+            aceptaTerminos = datos.aceptaTerminos == true
         )
 
-        val solicitud = crearSolicitudEmpresaUseCase.execute(command, carta.inputStream)
+        val solicitud = crearSolicitudEmpresaUseCase.execute(command, cartaAutorizacion?.inputStream)
         log.info("Solicitud registrada: {}", solicitud.numeroSolicitud)
         return ResponseEntity.status(HttpStatus.CREATED).body(solicitud.toResponse())
     }

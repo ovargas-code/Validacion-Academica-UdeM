@@ -15,7 +15,7 @@ import jakarta.validation.constraints.Size
  * El cliente debe enviar este objeto bajo la clave `datos` como un Blob JSON:
  * ```
  * formData.append("datos", new Blob([JSON.stringify(datos)], { type: "application/json" }))
- * formData.append("carta", archivoPdf)
+ * if (archivoPdf) formData.append("carta", archivoPdf)
  * ```
  */
 data class CrearSolicitudEmpresaRequest(
@@ -78,6 +78,7 @@ data class CrearSolicitudEmpresaRequest(
     @field:Size(max = 500, message = "Las observaciones no pueden superar 500 caracteres")
     val observaciones: String? = null,
 
+    @field:NotNull(message = "Debe aceptar los términos de uso y la política de tratamiento de datos")
     @field:AssertTrue(message = "Debe aceptar los términos de uso y la política de tratamiento de datos")
-    val aceptaTerminos: Boolean
+    val aceptaTerminos: Boolean? = null
 )

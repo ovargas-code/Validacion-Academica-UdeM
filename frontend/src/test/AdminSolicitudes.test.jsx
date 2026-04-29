@@ -5,7 +5,7 @@ import AdminSolicitudes from '../pages/AdminSolicitudes';
 
 vi.mock('../api/api', () => ({
   listarSolicitudesAdmin: vi.fn(),
-  descargarCartaSolicitud: vi.fn(),
+  descargarCertificadoFinalSolicitud: vi.fn(),
   marcarEnRevision: vi.fn(),
   aprobarSolicitud: vi.fn(),
   rechazarSolicitud: vi.fn(),

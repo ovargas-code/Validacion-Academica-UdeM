@@ -29,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional
  *
  * Contrato multipart verificado:
  *   - Parte "datos": Blob JSON (application/json)
- *   - Parte "carta": archivo PDF (application/pdf)
+ *   - Parte "carta": archivo PDF opcional (application/pdf)
  */
 @SpringBootTest(classes = [ValidacionAcademicaApplication::class])
 @AutoConfigureMockMvc
@@ -84,6 +84,19 @@ class SolicitudEmpresaControllerIntegrationTest {
             .andExpect(jsonPath("$.estado").value("PENDIENTE"))
             .andExpect(jsonPath("$.nombreEmpresa").value("Empresa Test S.A.S."))
             .andExpect(jsonPath("$.rutaCarta").doesNotExist()) // campo interno omitido
+    }
+
+    @Test
+    fun `POST solicitud sin carta devuelve 201 con numero de radicado`() {
+        mockMvc.perform(
+            multipart("/api/v1/solicitudes-empresa")
+                .part(datosPart(dadosValidos()))
+        )
+            .andExpect(status().isCreated)
+            .andExpect(jsonPath("$.numeroSolicitud").isString)
+            .andExpect(jsonPath("$.numeroSolicitud").value(org.hamcrest.Matchers.matchesPattern("SOL-\\d{8}-\\d{6}")))
+            .andExpect(jsonPath("$.estado").value("PENDIENTE"))
+            .andExpect(jsonPath("$.rutaCarta").doesNotExist())
     }
 
     @Test

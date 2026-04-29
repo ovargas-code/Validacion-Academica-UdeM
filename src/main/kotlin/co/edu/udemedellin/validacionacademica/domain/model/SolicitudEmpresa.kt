@@ -40,8 +40,8 @@ data class SolicitudEmpresa(
 
     // ── Archivo adjunto ───────────────────────────────────────────────────────
 
-    /** Ruta relativa al directorio de uploads donde se almacenó la carta de autorización en PDF. */
-    val rutaCarta: String,
+    /** Ruta relativa al directorio de uploads donde se almacenó la carta de autorización en PDF, si fue adjuntada. */
+    val rutaCarta: String? = null,
 
     // ── Trazabilidad ─────────────────────────────────────────────────────────
 

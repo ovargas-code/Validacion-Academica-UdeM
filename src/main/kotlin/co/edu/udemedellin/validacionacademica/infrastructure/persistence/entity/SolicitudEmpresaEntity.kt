@@ -81,8 +81,8 @@ class SolicitudEmpresaEntity(
 
     // ── Archivo adjunto ───────────────────────────────────────────────────────
 
-    @Column(name = "ruta_carta", nullable = false, length = 500)
-    var rutaCarta: String = "",
+    @Column(name = "ruta_carta", length = 500)
+    var rutaCarta: String? = null,
 
     // ── Trazabilidad ─────────────────────────────────────────────────────────
 
